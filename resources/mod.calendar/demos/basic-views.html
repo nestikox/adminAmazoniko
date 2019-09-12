@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8' />
+<link href='../fullcalendar.min.css' rel='stylesheet' />
+<link href='../fullcalendar.print.min.css' rel='stylesheet' media='print' />
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+<script src='../lib/moment.min.js'></script>
+<script src='../lib/jquery.min.js'></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+<script src='../fullcalendar.min.js'></script>
+<script src='../locale-all.js'></script>
+
+<script>
+
+	$(document).ready(function() {
+
+		var initialLocaleCode = 'es';
+
+		$.ajax({
+		method: "POST",
+		url: "consultaProgramacion.php",
+		beforeSend: function(){	$("#cargador_holder").fadeIn();},
+		data: { metodo: "obtenerProgramaciones" }
+		})
+		.done(function( msg ) {
+			$("#cargador_holder").fadeOut("slow");
+			msg = msg.substring(0, msg.length - 1);
+			msg = "["+msg+"]";
+			array = JSON.parse(msg);
+			
+
+			console.log(array);
+			var today = new Date();
+			var dd = String(today.getDate()).padStart(2, '0');
+			var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+			var yyyy = today.getFullYear();
+			today = yyyy + '-' + mm + '-' + dd ;
+			
+			$('#calendar').fullCalendar({
+				header: {
+					left: 'prev,next today',
+					center: 'title',
+					right: 'month,basicWeek,basicDay'
+				},
+				locale: initialLocaleCode,
+				defaultDate: today,
+				navLinks: true, // can click day/week names to navigate views
+				editable: true,
+				eventLimit: true, // allow "more" link when too many events
+				events: array
+			});
+		});
+	});
+
+</script>
+<style>
+
+	body {
+		padding: 0;
+		font-family: "Lucida Grande",Helvetica,Arial,Verdana,sans-serif;
+		font-size: 14px;
+	}
+
+	#calendar {
+		max-width: 900px;
+		margin: 0 auto;
+	}
+	#cargador{
+		position: absolute;height: 100px;width: 100px;top: 50%;left: 50%;margin-left: -50px;margin-top: -50px;
+	}
+	#cargador_holder{width: 100%;min-height: 100vh;position: absolute;background-color: rgba(136, 131, 131, 0.4196078431372549);z-index: 1000;
+	}
+
+</style>
+</head>
+<body>
+	<div id="cargador_holder" style="display:none;">
+		<div id="cargador" class="spinner-grow text-primary"></div>
+	</div>
+	<div id='calendar'></div>
+
+</body>
+</html>
