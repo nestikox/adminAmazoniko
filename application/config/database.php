@@ -72,7 +72,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 */
 $active_group = 'default';
 $query_builder = TRUE;
-
+/* DATOS SERVIDOR PRUEBAS */
+if($_SERVER['HTTP_HOST'] == '190.146.247.240'):
 $db['default'] = array(
 	'dsn'	=> '',
 	'hostname' => 'localhost',
@@ -115,3 +116,48 @@ $db['amazoniko'] = array(
 	'failover' => array(),
 	'save_queries' => TRUE
 );
+else:
+/* DATOS SERVIDOR PRODUCCION */
+$db['default'] = array(
+	'dsn'	=> '',
+	'hostname' => 'localhost',
+	'username' => 'amazonik_uadmin',
+	'password' => 'group5md1',
+	'database' => 'amazonik_amazoniko2',
+	'dbdriver' => 'mysqli',
+	'dbprefix' => '',
+	'pconnect' => FALSE,
+	'db_debug' => (ENVIRONMENT !== 'production'),
+	'cache_on' => FALSE,
+	'cachedir' => '',
+	'char_set' => 'utf8',
+	'dbcollat' => 'utf8_general_ci',
+	'swap_pre' => '',
+	'encrypt' => FALSE,
+	'compress' => FALSE,
+	'stricton' => FALSE,
+	'failover' => array(),
+	'save_queries' => TRUE
+);
+$db['amazoniko'] = array(
+	'dsn'	=> '',
+	'hostname' => 'localhost',
+	'username' => 'amazonik_servi',
+	'password' => 'group5md1',
+	'database' => 'amazonik_amazoniko',
+	'dbdriver' => 'mysqli',
+	'dbprefix' => '',
+	'pconnect' => FALSE,
+	'db_debug' => (ENVIRONMENT !== 'production'),
+	'cache_on' => FALSE,
+	'cachedir' => '',
+	'char_set' => 'utf8',
+	'dbcollat' => 'utf8_general_ci',
+	'swap_pre' => '',
+	'encrypt' => FALSE,
+	'compress' => FALSE,
+	'stricton' => FALSE,
+	'failover' => array(),
+	'save_queries' => TRUE
+);
+endif;

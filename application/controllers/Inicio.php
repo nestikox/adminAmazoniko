@@ -16,7 +16,6 @@ class Inicio extends CI_Controller
 	}
 	
 	public function index(){
-		
 		/* TITULO DE PAGINA */
 		$h_data = array('titulo_pagina' => 'Login - Amazóniko');
 		/* CONTENIDO ESTATICO */
