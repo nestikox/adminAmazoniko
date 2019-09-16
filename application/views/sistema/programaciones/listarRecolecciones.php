@@ -149,7 +149,7 @@
                 /* Refrescar los datos cada 30seg sin resetear paginacion */
                 setInterval( function () {
                     tabla.ajax.reload( null, false );
-                }, 30000 );
+                }, 25000 );
                 /*$("#crearRecoleccionButton").on('click', function(){
                   var data = $('#recoleccion_form').serialize();
                   $("#loader_recoleccion").fadeIn();

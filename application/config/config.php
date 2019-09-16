@@ -23,8 +23,11 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 | a PHP script and you can easily do that on your own.
 |	$config['base_url'] = 'http://localhost/amazonikoAA';
 */
+if($_SERVER['HTTP_HOST'] == '190.146.247.240'):
 $config['base_url'] = 'http://190.146.247.240/amazoniko/amazonikoAA';
-
+else:
+$config['base_url'] = 'https://amazoniko.com/adminAmazoniko';
+endif;
 /*
 |--------------------------------------------------------------------------
 | Index File

@@ -14,7 +14,7 @@
   <div class="login-box-body" style="border-radius: 5px;box-shadow: 0px 3px 15px black;background-color: rgba(255,255,255,0.5)!important">
     <!--<p class="login-box-msg"><?php if(isset($message)){echo $message;}else{echo "Llena este formulario para procesar tu registro.";}?></p>-->
 
-    <form action="<?php echo site_url('inicio/registrarUsuario');?>" method="post" id="registroForm">
+    <form action="<?php echo site_url('inicio/registrarUsuario?i=1');?>" method="post" id="registroForm">
         <div class="form-group has-feedback">
             <input type="email" class="form-control" id="email" name="correo" aria-describedby="correohelp" placeholder="Email" required>
 			<span class="glyphicon glyphicon-envelope form-control-feedback"></span>

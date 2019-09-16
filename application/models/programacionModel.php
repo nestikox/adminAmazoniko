@@ -44,6 +44,55 @@
            // }
         }
         
+        public function cambiarEstadoRecoleccion($idR, $estado){
+          $e = array('estado'=>$estado);
+          $this->db->where('id', $idR);
+          if($this->db->update('a009_recolecciones', $e)){
+            return true;
+           }else{
+            return false;
+           }
+         }
+        public function validarActivarRecoleccion($idR){
+          $q="select * from a009_recolecciones where id = $idR";
+          $qr=$this->db->query($q);
+          $r = $qr->row();
+          /* activar en caso de que este en espera */
+          if($r->estado!=4 and $r->estado!=3 and $r->estado!=2){
+            $this->cambiarEstadoRecoleccion($idR, 2);
+          }
+        }
+         
+        public function getParaderosRecoleccion($idR){
+          $qv ="select usuario_id from a010_recoleccion_data where recoleccion_id =$idR;";
+          $qvr = $this->db->query($qv);
+          $val = $qvr->result();
+          $npro = $qvr->num_rows();
+          $puntosYaPro = "";
+          $c1 = 0;
+          foreach($val as $k1 =>$v1){
+            if($c1==0){ $puntosYaPro.= $v1->usuario_id;
+            }else{ $puntosYaPro.= ','.$v1->usuario_id; }
+            $c1++;
+          }
+          /* fin de obtencion de los paraderos que ya estan procesados en la recoleccion */
+          if($npro>0){
+            $qadd="and u.id not in (".$puntosYaPro.");";
+          }else{
+            $qadd=";";
+          }
+          /* en caso no asignados no dañar el query */
+          $q1="select ru.usuario, pa.direccion, concat(u.first_name,' ',u.last_name) as nombre_usuario, u.tipo_vivienda,pa.nombre as nombre_vivienda, u.address_detail from a010_recoleccion_usuarios ru
+            left join a002_paraderos pa on pa.usuario_id = ru.usuario 
+            left join users u on pa.usuario_id = u.id
+            where ru.recoleccion =".$idR." ".$qadd;
+          $qr1 = $this->db->query($q1);
+          $result = array();
+          $result['n'] = $qr1->num_rows();
+          $result['r'] = $qr1->result();
+          return $result;
+        }
+        
         public function getProximasFechas($id){
           /* validaciones */
           $result = array();
@@ -53,7 +102,9 @@
             left join a003_zonas z on r.id_zona = z.id
             left join a007_programaciones_fecha pf on p.id = pf.programacion_id
             left join a007_programacion_usuarios pu on pf.id = pu.programacion_fecha
-            where pa.usuario_id = $id and pu.id is null and pf.estado = 1 ;";
+            where pa.usuario_id = $id and pu.id is null and pf.estado = 1
+            and nuevafecha < DATE_ADD(CURRENT_DATE(), INTERVAL 8 DAY);";
+            /* programaciones dateadd para traer solo las fechas de la proxima semana */
           $qr1 = $this->db->query($q);
           $q1n = $qr1->num_rows();
           $q2 ="select pf.*, r.nombre as ruta, z.nombre as zona, pu.* from a002_paraderos pa
@@ -71,6 +122,25 @@
           $result['r2']= ($q2n>0?1:0);
           return $result;
         }
+        
+        public function validarFechasRecoleccion($idR){
+         $q1 = "select a.*,b.*, current_date() as today from a009_recolecciones a
+            left join a007_programaciones_fecha b on b.id = a.fecha_id
+            where a.id=$idR;";
+         $qr1 = $this->db->query($q1);
+         $r1 = $qr1->row();
+         $n = $qr1->num_rows();
+         if($n>0){
+          if($r1->nuevafecha == $r1->today){
+            return true;
+           }else{
+            return false;
+           }
+         }else{
+          return false;
+         }
+        }
+        
         public function comprobarParadero($idUsuario){
           $q2 ="select * from a002_paraderos where usuario_id = $idUsuario;";
           $qr2 = $this->db->query($q2);
@@ -223,6 +293,14 @@
             return $insert_id;
           }else{
               return false;
+          }
+        }
+        public function guardarRecoleccionData($data){
+              if($this->db->insert('a010_recoleccion_data', $data)){
+            $insert_id = $this->db->insert_id();
+            return $insert_id;
+          }else{
+              return 0;
           }
         }
     }

@@ -48,9 +48,9 @@
                     <?php if($fecha['r1']<1):?>
                       <div class="col-md-6 form-group">
                         <?php if($paraderoExiste==0):?>
-                          <h4>Nota: El usuario no ha configurado la informacion de paradero por favor <a href="<?php echo site_url('usuarios/perfilUsuario');?>">actualice sus datos</a>.</h4>
+                         <h4>Nota: El usuario no ha configurado la informacion de paradero por favor <a href="<?php echo site_url('usuarios/perfilUsuario');?>">actualice sus datos</a>.</h4>
                         <?php else:?>
-                        <h4>Nota: No se han encontrado rutas asignadas a su paradero, por favor actualice su información de recolección.</h4>
+                        <h4>Nota: No existen fechas proximas para mostrar.</h4>
                         <?php endif;?>
                       </div>
                     <?php endif;?>

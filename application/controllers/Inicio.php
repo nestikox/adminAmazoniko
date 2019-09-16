@@ -56,7 +56,7 @@ class Inicio extends CI_Controller
 				$this->session->set_userdata($sessionInfo);
 				//redirect them back to the home page
 				$this->session->set_flashdata('message', $this->ion_auth->messages());
-				return redirect('sistema', 'refresh');
+				return redirect('sistema?w=1', 'refresh');
 			}
 			$this->session->set_flashdata('message', $this->ion_auth->messages());
 			redirect("inicio", 'refresh');

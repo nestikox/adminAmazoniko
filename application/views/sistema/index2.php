@@ -2,17 +2,34 @@
 <body class="hold-transition skin-green sidebar-mini">
 <link href='<?php echo base_url('resources/mod.calendar');?>/fullcalendar.min.css' rel='stylesheet' />
 <link href='<?php echo base_url('resources/mod.calendar');?>/fullcalendar.print.min.css' rel='stylesheet' media='print' />
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
 <style>
 	body {padding: 0;font-family: 'Oxygen', Arial, Helvetica, 'Nimbus Sans L', sans-serif;font-size: 14px;}
 	#calendar {max-width: 900px;margin: 0 auto;}
 	#cargador{position: absolute;height: 100px;width: 100px;top: 50%;left: 50%;margin-left: -50px;margin-top: -50px;}
 	#cargador_holder{width: 100%;min-height: 100vh;position: absolute;background-color: rgba(136, 131, 131, 0.4196078431372549);z-index: 1000;}
+	.mySlides {display:none}
+	.w3-left, .w3-right, .w3-badge {cursor:pointer}
+	.w3-badge {height:13px;width:13px;padding:0}
+</style>
+	
 </style>
 <div class="wrapper">
   <?php echo $header;?>
   <!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
-	<img src="images/black-and-white.jpg" width="100%">
+	<div class="w3-content w3-display-container" style="max-width:1800px">
+	  <img class="mySlides" src="images/slide1.jpg" style="width:100%">
+	  <img class="mySlides" src="images/slide2.jpg" style="width:100%">
+	  <img class="mySlides" src="images/slide3.jpg" style="width:100%">
+	  <div class="w3-center w3-container w3-section w3-large w3-text-white w3-display-bottommiddle" style="width:100%">
+		<div class="w3-left w3-hover-text-khaki" onclick="plusDivs(-1)">&#10094;</div>
+		<div class="w3-right w3-hover-text-khaki" onclick="plusDivs(1)">&#10095;</div>
+		<span class="w3-badge demo w3-border w3-transparent w3-hover-white" onclick="currentDiv(1)"></span>
+		<span class="w3-badge demo w3-border w3-transparent w3-hover-white" onclick="currentDiv(2)"></span>
+		<span class="w3-badge demo w3-border w3-transparent w3-hover-white" onclick="currentDiv(3)"></span>
+	  </div>
+	</div>
    <!-- Content Header (Page header) -->
 						 <section class="content-header">
 					<h1>Dashboard
@@ -67,9 +84,10 @@
             
           </div>
         </div>
+		<?php if($this->ion_auth->in_group('members')):?>
 		<div class="col-lg-3 col-xs-6">
           <!-- small box -->
-          <a href="http://190.146.247.240/amazoniko/amazonikoAA/programaciones"><div class="small-box bg-blue-gradient">
+          <a href="<?php echo site_url('programaciones')?>"><div class="small-box bg-blue-gradient">
             <div class="inner">
               <h3><sup style="font-size: 20px">&nbsp;</sup></h3>
               <p>Programar recolección</p>
@@ -79,6 +97,21 @@
             </div>
           </div></a>
         </div>
+		<?php endif;?>
+		<?php if($this->ion_auth->in_group('recolectores')):?>
+		<div class="col-lg-3 col-xs-6">
+          <!-- small box -->
+          <a href="<?php echo site_url('programaciones/recolectores')?>"><div class="small-box bg-blue-gradient">
+            <div class="inner">
+              <h3><sup style="font-size: 20px">&nbsp;</sup></h3>
+              <p>Ver recolecciones</p>
+            </div>
+            <div class="icon">
+              <i class="fa fa-truck"></i>
+            </div>
+          </div></a>
+        </div>
+		<?php endif;?>
         <!-- ./col -->
         
         <!-- ./col -->
@@ -170,27 +203,39 @@
   <div class="control-sidebar-bg"></div>
 </div>
 <!-- ./wrapper -->
-<?php if(isset($message)):?>
+
 <!-- Modal -->
-  <div class="modal fade" id="infoModal" role="dialog">
+<?php if(isset($w) and $w==1):?>
+	<div class="modal fade" id="infoModal" role="dialog">
+    <div class="modal-dialog modal-lg">
+      <!-- Modal content-->
+      <div class="modal-content">
+        <div class="modal-body">
+					<img id="tut1" src="<?php echo base_url('images/tutorial1.png');?>" style="width:100%">
+					<img id="tut2" style="display:none;width:100%;" src="<?php echo base_url('images/tutorial2.png');?>">
+        </div>
+      </div>
+			<div class="modal-footer">
+        <button type="button" id="siguienteButton" class="btn btn-default">Siguiente</button>
+				<button type="button" id="cerrarButton" class="btn btn-default" style="display:none;" data-dismiss="modal">Finalizar</button>
+      </div>
+    </div>
+  </div>
+<?php elseif(isset($a) and $a==1):?>
+<div class="modal fade" id="infoModal" role="dialog">
     <div class="modal-dialog">
       <!-- Modal content-->
       <div class="modal-content">
-        <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
-          <h4 class="modal-title"><span class="glyphicon glyphicon-info-sign"></span>&nbsp;&nbsp;Información</h4>
-        </div>
         <div class="modal-body">
-          <p id="message_modal"></p>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+				<a href="usuarios/perfilUsuario"><img src="images/welcome.jpg" style="width:100%"></a>
         </div>
       </div>
     </div>
   </div>
+<?php endif;?>
+  
 	<script></script>
-	<?php endif;?>
+
 <!-- jQuery 3 -->
 <script src="<?php echo base_url('resources/');?>bower_components/jquery/dist/jquery.min.js"></script>
 <!-- jQuery UI 1.11.4 -->
@@ -227,12 +272,17 @@
 <!-- AdminLTE App -->
 <script src="<?php echo base_url('resources/');?>dist/js/adminlte.min.js"></script>
 <script>
-	<?php if(isset($message)):?>
-	setTimeout(function(){
-		var m = '<?=$message?>';
-		$("#message_modal").html('');
-		$("#message_modal").html(m);
-		$("#infoModal").modal(); },500);
+	<?php if(isset($w) and $w==1):?>
+	setTimeout(function(){ $("#infoModal").modal(); },500);
+	$("#siguienteButton").on('click', function(){
+		$("#tut1").hide();
+		$("#tut2").fadeIn();
+		$("#siguienteButton").hide();
+		$("#cerrarButton").fadeIn();
+	});
+	<?php endif;?>
+	<?php if(isset($a) and $a==1):?>
+	setTimeout(function(){ $("#infoModal").modal(); },500);
 	<?php endif;?>
 	$(document).ready(function() {
     var initialLocaleCode = 'es';
@@ -282,6 +332,34 @@
 		});
 	});
 
+</script>
+<script>
+var slideIndex = 1;
+showDivs(slideIndex);
+
+function plusDivs(n) {
+  showDivs(slideIndex += n);
+}
+
+function currentDiv(n) {
+  showDivs(slideIndex = n);
+}
+
+function showDivs(n) {
+  var i;
+  var x = document.getElementsByClassName("mySlides");
+  var dots = document.getElementsByClassName("demo");
+  if (n > x.length) {slideIndex = 1}
+  if (n < 1) {slideIndex = x.length}
+  for (i = 0; i < x.length; i++) {
+    x[i].style.display = "none";  
+  }
+  for (i = 0; i < dots.length; i++) {
+    dots[i].className = dots[i].className.replace(" w3-white", "");
+  }
+  x[slideIndex-1].style.display = "block";  
+  dots[slideIndex-1].className += " w3-white";
+}
 </script>
 </body>
 </html>

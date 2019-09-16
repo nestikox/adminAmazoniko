@@ -1,4 +1,6 @@
-<?php echo $head;?>
+<?php
+date_default_timezone_set("America/Bogota");
+echo $head;?>
 
 <body class="hold-transition skin-green sidebar-mini">
   <link rel="stylesheet" href="<?php echo base_url('resources/');?>bower_components/jquery-ui/themes/south-street/jquery-ui.min.css">
@@ -35,7 +37,6 @@
 						</section>
     <!-- Main content -->
 <section class="content">
-   
         <div class="box box-default">
                 <div class="box-header with-border">
                     <h3 class="box-title"><b>Listado de recolecciones</b></h3>
@@ -61,9 +62,11 @@
                 <table id="rutas" class="display hover responsive cell-border">
                                 <thead>
                                     <tr>
-                                        <th>Programacion</th>
+                                        <th>RID</th>
+                                        <th>PID</th>
                                         <th>Fecha</th>
                                         <th>Ruta</th>
+                                        <th>Estado</th>
                                         <th>Opciones</th>
                                     </tr>
                                 </thead>
@@ -96,14 +99,27 @@
 <script src="<?= base_url('resources/plugins/datatables/jquery.dataTables.min.js') ?>"></script>
 <script src="<?= base_url('resources/plugins/datatables/dataTables.bootstrap.min.js') ?>"></script>
 <script>
+  var datat;
+  $(document).ready(function(){
+            var es = {"decimal":"","emptyTable":"No hay datos disponibles...","info":"Mostrando _START_ a _END_ de _TOTAL_ entradas","infoEmpty":"Mostrando 0 a 0 de 0 entradas","infoFiltered":"(filtrado de _MAX_ total de entradas)","infoPostFix":"","thousands":",","lengthMenu":"Mostrar _MENU_ entradas","loadingRecords": "Cargando...","processing":"Procesando datos...","search":"Busqueda:","zeroRecords":"No se encontraron coincidencias.","paginate": {"first": "Primer","last":"Ultimo","next":"Próximo","previous":"Anterior"}};
+            datat = $('#rutas').DataTable({
+                "processing": true,
+                "serverSide": true,
+                "ordering": false,
+                "ajax": "<?=site_url('ajax_request/pag_rRecolecciones/'.$idUsuario)?>",
+                "language": es
+                });
+             setInterval( function () { datat.ajax.reload( null, false ); }, 30000 );
+            
+        });
   function iniciarRecoleccion(idR, fechaR){
     var today = '<?=date('Y-m-d');?>';
-    var c = confirm('Desea generar iniciar la recoleccion '+idR);
-    var test = '2019-09-04';
+    console.log(fechaR, today);
+    var c = confirm('Desea iniciar la recoleccion '+idR);
     if(c){  
       if(today == fechaR){
-         console.log(today==fechaR);
-        console.log(today==test);
+        window.open('<?php echo site_url('programaciones/recolectar/');?>'+idR);
+        setTimeout( function () { datat.ajax.reload( null, false ); }, 2000);
       }else{
         $("#dialog_text").html('La fecha de recoleccion no es correcta, por favor intente el dia de recoleccion');
         $( "#dialog" ).dialog({
@@ -127,16 +143,7 @@
 
     return [year, month, day].join('-');
 }
-        $(document).ready(function(){
-            var es = {"decimal":"","emptyTable":"No hay datos disponibles...","info":"Mostrando _START_ a _END_ de _TOTAL_ entradas","infoEmpty":"Mostrando 0 a 0 de 0 entradas","infoFiltered":"(filtrado de _MAX_ total de entradas)","infoPostFix":"","thousands":",","lengthMenu":"Mostrar _MENU_ entradas","loadingRecords": "Cargando...","processing":"Procesando datos...","search":"Busqueda:","zeroRecords":"No se encontraron coincidencias.","paginate": {"first": "Primer","last":"Ultimo","next":"Próximo","previous":"Anterior"}};
-            $('#rutas').DataTable( {
-                "processing": true,
-                "serverSide": true,
-                "ordering": false,
-                "ajax": "<?=site_url('ajax_request/pag_rRecolecciones/'.$idUsuario)?>",
-                "language": es
-                });
-            });
+        
     </script>
 </body>
 </html>

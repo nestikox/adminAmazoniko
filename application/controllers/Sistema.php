@@ -29,24 +29,23 @@ class Sistema extends CI_Controller
 		/* CONTENIDO ESTATICO */
 		$head = array('head'=>$this->load->view('sistema/static/head',$headData,true),
 					  'header'=>$this->load->view('sistema/static/header',$headerData,true));
+		/* USUARIO COMUN */
 		if($this->ion_auth->in_group('members')){
 			if(!$this->rutasModel->chequearParaderoExisteUsuario($id)){
-				if(isset($_SESSION['message'])){
-					$_SESSION['message']='';
-					$this->session->set_flashdata('message', $_SESSION['message'].'  Por favor Actualice Sus Datos de recoleccion en la seccion de  <a href="'.site_url('usuarios/perfilUsuario').'">Mi perfil</a>');//redirect("usuarios", 'refresh');
-				}else{
-					$_SESSION['message']='';
-					$this->session->set_flashdata('message', '  Por favor Actualice Sus Datos de recoleccion en la seccion de  <a href="'.site_url('usuarios/perfilUsuario').'">Mi perfil</a>');//redirect("usuarios", 'refresh');
-				}
+				$head['a']=1;			
 			}
-			if(isset($_SESSION['message'])){$head['message'] = $_SESSION['message'];}
+			if(isset($_GET['w']) and $_GET['w']==1){
+				$head['w']=1;
+				$head['a']=0;
+			}
 			$head['dashboard']=$this->sistemaModel->getDashboard('members', $id);
 			$this->load->view('sistema/index2', $head);
 			/* index para no administradores*/
 		}
-		
+		/* RECOLECTORES */
 		if($this->ion_auth->in_group('recolectores')){
 			if(isset($_SESSION['message'])){$head['message'] = $_SESSION['message'];}
+			$head['dashboard']=$this->sistemaModel->getDashboard('recolector', $id);
 			$this->load->view('sistema/index2', $head);
 			/* index para no administradores*/
 		}
@@ -60,6 +59,7 @@ class Sistema extends CI_Controller
 	}
 	
 	public function historialUsuario(){
+		$id = $this->session->userdata('user_id');
 		/*HEAD*/
 		$headData = array('titulo_pagina' => 'Historial - Amazoniko');
 		/*HEADER*/
@@ -68,7 +68,17 @@ class Sistema extends CI_Controller
 		$head = array('head'=>$this->load->view('sistema/static/head',$headData,true),
 					  'header'=>$this->load->view('sistema/static/header',$headerData,true));
 		if(isset($_SESSION['message'])){$head['message'] = $_SESSION['message'];}
-		$this->load->view('sistema/historial/historial', $head);
+		if($this->ion_auth->in_group('recolectores')){
+			$head['recolector']=1;
+			$head['usuario']=$id;
+			$this->load->view('sistema/historial/historial', $head);	
+		}
+		if($this->ion_auth->in_group('members')){
+			$head['recolector']=0;
+			$head['usuario']=$id;
+			$this->load->view('sistema/historial/historial', $head);	
+		}
+		
 		/* index para no administradores*/
 	}
 	

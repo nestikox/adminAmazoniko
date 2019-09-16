@@ -12,8 +12,10 @@ class Ajax_request extends CI_Controller
     public function getHistorial($idUser=0){
         $request = $_REQUEST;/*pedidos de datatable*/
         $data = array();
+        $recolector = $_GET['r'];
+        if($recolector==1){$t = 'recolector_id';}else{$t = 'usuario_id';}
         /* AREA DE ARMADO DE LOS QUERYS DE CONSULTA */
-        $q = "SELECT * FROM amazoniko2.a010_recoleccion_data where usuario_id=$idUser ";
+        $q = "SELECT * FROM amazoniko2.a010_recoleccion_data where ".$t."=$idUser ";
         $totalData=$this->ajaxRequestModel->request_conteo($q);
         /* si existe una busqueda agregar los campos para filtrar resultados */
         /* AREA DE FILTROS */
@@ -276,6 +278,48 @@ class Ajax_request extends CI_Controller
          echo $response; die(); /* for some reason i have to kill the process in this case or it will redirect so it wont work */
          //die($this->output->set_content_type('application/json')->set_output());
 	}
+    public function finalizarRecoleccion($id){
+        $this->load->model('programacionModel');
+        /* cambiar el estado a finalizada */
+        $this->programacionModel->cambiarEstadoRecoleccion($id, 4);
+        $r = array();
+        $r['c']=1;
+        $r['url']=site_url('programaciones/recolectores');
+        echo json_encode($r);
+    }
+    public function getParaderosRecoleccion($idr=0){
+        $this->load->model('programacionModel');
+        $idRecoleccion=0;
+        if(isset($_POST['idruta']) and $_POST['idruta']>0){
+            $idRecoleccion=$_POST['idruta'];
+        }elseif(isset($idr) and $idr>0){
+            $idRecoleccion=$idr;
+        }
+        $res =  array();
+        if($idRecoleccion>0){
+            /* obtener los paraderos de la recoleccion */
+            $paraderos = $this->programacionModel->getParaderosRecoleccion($idRecoleccion);   
+            if($paraderos['n']>0){
+                $poptions ="<option value=''> Seleccione Paradero...</option>";
+                foreach($paraderos['r'] as $k=>$v){
+                    $poptions.="<option value='".$v->usuario."'>".$v->direccion." ".$v->tipo_vivienda."/".$v->nombre_vivienda." ".$v->address_detail."</option>";
+                }
+                $res['code'] = 1;
+                $res['m'] = 'Peticion procesada.';
+                $res['d'] = $poptions;
+                echo json_encode($res);
+            }else{
+                $res['code'] = 2;
+                $res['m'] = 'Finalizaron los Paraderos.';
+                $res['d'] = '<option value="">No existen mas paraderos pendientes...</option>';
+                echo json_encode($res);
+            }
+        }else{
+            $res['code'] = 0;
+            $res['m'] = 'No se ha enviado recoleccion.';
+            echo json_encode($res);
+        }
+    }
     
     public function pag_rutas_usuarios(){
         $request = $_REQUEST;/*pedidos de datatable*/
@@ -388,36 +432,40 @@ class Ajax_request extends CI_Controller
         echo json_encode($r);
     }
     
-    public function pag_rRecolecciones($idUsuario){
+    public function pag_rRecolecciones($idUsuario=0){
         $request = $_REQUEST;/*pedidos de datatable*/
-            $data = array();
-            /* AREA DE ARMADO DE LOS QUERYS DE CONSULTA */
-            $q = "SELECT d.*, c.*, e.nombre, d.id as idRecoleccion FROM a005_usuario_rutas a
-                left join a001_ruta e on a.ruta_id = e.ida001_ruta
-                left join a006_programaciones b on a.ruta_id = b.ruta
-                left join a007_programaciones_fecha c on c.programacion_id = b.id
-                left join a009_recolecciones d on d.fecha_id = c.id
-                where a.usuario_id = 1 and d.id is not null and c.nuevafecha > DATE_ADD(CAST(NOW() AS DATE), INTERVAL -50 DAY) ";
-            $totalData=$this->ajaxRequestModel->request_conteo($q);
-            /* si existe una busqueda agregar los campos para filtrar resultados */
-            /* AREA DE FILTROS */
-            if(!empty($request['search']['value'])){
-                $q.=" and (d.id like '".$request['search']['value']."%')";
-            }
-            /* PAGINACION */
-            $q.=" limit ".$request['start'].",".$request['length']." ";
-            $rs = $this->ajaxRequestModel->request($q);
-            $totalFiltered=$this->ajaxRequestModel->request_conteo($q);
-            $rutas = "";
+        $data = array();
+        /* AREA DE ARMADO DE LOS QUERYS DE CONSULTA */
+        $q = "SELECT d.id as idRecoleccion,d.estado as estadoCodigo,d.*,f.nombre as estadoRecoleccion, c.*, e.nombre, d.id as idRecoleccion FROM a005_usuario_rutas a
+            left join a001_ruta e on a.ruta_id = e.ida001_ruta
+            left join a006_programaciones b on a.ruta_id = b.ruta
+            left join a007_programaciones_fecha c on c.programacion_id = b.id
+            left join a009_recolecciones d on d.fecha_id = c.id
+            left join a010_recoleccion_estado f on d.estado = f.id
+            where a.usuario_id =$idUsuario and d.id is not null and c.nuevafecha BETWEEN DATE_ADD(current_date(), INTERVAL -50 DAY) AND DATE_ADD(current_date(), INTERVAL 16 DAY) ";
+        $totalData=$this->ajaxRequestModel->request_conteo($q);
+        /* si existe una busqueda agregar los campos para filtrar resultados */
+        /* AREA DE FILTROS */
+        if(!empty($request['search']['value'])){
+            $q.=" and (d.id like '".$request['search']['value']."%')";
+        }
+        /* PAGINACION */
+        $q.=" order by nuevafecha desc limit ".$request['start'].",".$request['length']." ";
+        $rs = $this->ajaxRequestModel->request($q);
+        $totalFiltered=$this->ajaxRequestModel->request_conteo($q);
+        $rutas = "";
         /* Ordenar los resultados para ser procesados */
         foreach($rs as $k=>$r){
             $subdata = array();
+            $subdata[] = $r->idRecoleccion;
             $subdata[] = $r->programacion_id;
             $subdata[] = $r->nuevafecha;
             $subdata[] = $r->nombre;
+            $subdata[] = $r->estadoRecoleccion;
             /* OPCIONES MAS LARGO */
+            $opciones = $this->filterOptionEstado($r->estadoCodigo, $r);
             /*$edicionUsuarioUrl = site_url('programacion/editarProgramacion/'.$r->id);*/
-            $subdata[] = '<a href="#" onClick="iniciarRecoleccion(\''.$r->idRecoleccion.'\',\''.$r->nuevafecha.'\')" ><i class="fa fa-truck"> Iniciar recoleccion</i></a>';
+            $subdata[] = $opciones;
             /* FIN DE OPCIONES */
             $data[] = $subdata;
         }
@@ -430,6 +478,97 @@ class Ajax_request extends CI_Controller
         $response = json_encode($results);
         echo $response;/* for some reason i have to kill the process in this case or it will redirect so it wont work */
         //die($this->output->set_content_type('application/json')->set_output());
+    }
+    
+    public function guardarRecoleccion($id){
+        $this->load->model('programacionModel');
+        /* datos de la recoleccion */
+        $data = array(
+          'recoleccion_id' => $id,
+          'usuario_id' => $_POST['paradero'],
+          'recolector_id' => $_POST['recolector'],
+          'estado' =>1,
+          'bolsa_a' =>$_POST['bolsaa'],
+          'bolsa_b' =>$_POST['bolsab'],
+          'peso_a' =>$_POST['pesoa'],
+          'peso_b' =>$_POST['pesob'],
+          'calificacion'=>$_POST['stars'],
+          'puntos' =>$_POST['puntos'] 
+        );
+        $result = array();
+        $rec= $this->programacionModel->guardarRecoleccionData($data);
+        if($rec>0){
+            $result['c']=$rec;
+            $result['m']='Recoleccion procesada.';
+            echo json_encode($result);
+        }else{
+            $result['c']=0;
+            $result['m']='No se pudo guardar la Recoleccion.';
+            echo json_encode($result);
+        }
+    }
+    
+    public function pagRecoleccionLive($idR){
+        $request = $_REQUEST;/*pedidos de datatable*/
+        $data = array();
+        /* AREA DE ARMADO DE LOS QUERYS DE CONSULTA */
+        $q = "SELECT rd.*,concat(u.tipo_vivienda,'/',pa.nombre,'-',u.address_detail) as ubicacion FROM a010_recoleccion_data rd
+            left join a002_paraderos pa on pa.usuario_id = rd.usuario_id
+            left join users u on pa.usuario_id = u.id
+            where recoleccion_id=$idR ";
+        $totalData=$this->ajaxRequestModel->request_conteo($q);
+        /* AREA DE FILTROS */
+        if(!empty($request['search']['value'])){
+            $q.=" and (d.id usuario_id '".$request['search']['value']."%')";
+        }
+        /* PAGINACION */
+        $q.=" limit ".$request['start'].",".$request['length']." ";
+        $rs = $this->ajaxRequestModel->request($q);
+        $totalFiltered=$this->ajaxRequestModel->request_conteo($q);
+        $rutas = "";
+        /* Ordenar los resultados para ser procesados */
+        foreach($rs as $k=>$r){
+            $subdata = array();
+            $subdata[] = $r->bolsa_a;
+            $subdata[] = $r->bolsa_b;
+            $subdata[] = $r->peso_a;
+            $subdata[] = $r->peso_b;
+            $subdata[] = $r->calificacion;
+            $subdata[] = $r->puntos;
+            $subdata[] = $r->ubicacion;
+            /* OPCIONES MAS LARGO */
+            //$opciones = $this->filterOptionEstado($r->estadoCodigo, $r);
+            /*$edicionUsuarioUrl = site_url('programacion/editarProgramacion/'.$r->id);*/
+            $subdata[] = 'opciones';
+            /* FIN DE OPCIONES */
+            $data[] = $subdata;
+        }           
+        $results = array("draw"=> intval($request['draw']),"recordsTotal"=> intval($totalData),"recordsFiltered"=> intval($totalData),"data"=>$data);$response = json_encode($results);
+        echo $response;
+    }
+    public function filterOptionEstado($estado, $r){
+        switch($estado){
+            case 1:
+                $op = '<a href="#" onClick="iniciarRecoleccion(\''.$r->idRecoleccion.'\',\''.$r->nuevafecha.'\')" ><i class="fa fa-clock-o"></i> <i class="fa fa-truck"> Iniciar recoleccion</i></a>';
+                return $op;
+            break;
+            case 2:
+                $op = '<a href="'.site_url('programaciones/recolectar/'.$r->idRecoleccion).'"><i class="fa fa-truck"> Ir a recoleccion</i></a>';
+                return $op;
+            break;
+            case 3:
+                $op = '<i class="fa fa-minus-circle faCancelada" title="Recoleccion Cancelada"></i>';
+                return $op;
+            break;
+            case 4:
+                $op = '<i class="fa fa-calendar-check-o faFinalizada" title="Recoleccion Finalizada !"></i>';
+                return $op;
+            break;
+            case 5:
+                 $op = '<i class="fa fa-clock-o faVence" title="Recoleccion Finalizada-Vencida"></i>';
+                return $op;
+            break;
+        }
     }
     
     public function postularRecoleccion(){

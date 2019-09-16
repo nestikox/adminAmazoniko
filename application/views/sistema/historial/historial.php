@@ -103,11 +103,12 @@
 <script>
         $(document).ready(function(){
             var es = {"decimal":"","emptyTable":"No hay datos disponibles...","info":"Mostrando _START_ a _END_ de _TOTAL_ entradas","infoEmpty":"Mostrando 0 a 0 de 0 entradas","infoFiltered":"(filtrado de _MAX_ total de entradas)","infoPostFix":"","thousands":",","lengthMenu":"Mostrar _MENU_ entradas","loadingRecords": "Cargando...","processing":"Procesando datos...","search":"Busqueda:","zeroRecords":"No se encontraron coincidencias.","paginate": {"first": "Primer","last":"Ultimo","next":"Próximo","previous":"Anterior"}};
+            var rec = '<?php echo (isset($recolector)?$recolector:0);?>';
             $('#historial').DataTable( {
                 "processing": true,
                 "serverSide": true,
                 "ordering": false,
-                "ajax": "<?=site_url('ajax_request/getHistorial/'.$this->session->userdata('user_id'))?>",
+                "ajax": "<?=site_url('ajax_request/getHistorial/'.$usuario.'?r=')?>"+rec,
                 "language": es
                 });
             });

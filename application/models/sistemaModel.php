@@ -47,12 +47,18 @@
             case 'members':
               $q="select
               (select puntos from users where id=".$user.") as puntos,
-              (select sum(peso_a) from a010_recoleccion_data where usuario_id =".$user." and estado=4) as plastico,
-              (select sum(peso_b) from a010_recoleccion_data where usuario_id =".$user." and estado=4) as reciclado ";
+              (select sum(peso_a) from a010_recoleccion_data where usuario_id =".$user." and estado in (1,4)) as plastico,
+              (select sum(peso_b) from a010_recoleccion_data where usuario_id =".$user." and estado in (1,4)) as reciclado ";
               $qr = $this->db->query($q);
               return $qr->row(); 
             break;
             case 'recolector':
+              $q="select
+              (select puntos from users where id=".$user.") as puntos,
+              (select sum(peso_a) from a010_recoleccion_data where recolector_id =".$user." and estado in (1,4)) as plastico,
+              (select sum(peso_b) from a010_recoleccion_data where recolector_id =".$user." and estado in (1,4)) as reciclado ";
+              $qr = $this->db->query($q);
+              return $qr->row(); 
               break;
           }
           } 

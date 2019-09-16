@@ -145,13 +145,15 @@
         $(document).ready(function(){
           $("#infoModal").modal();
             var es = {"decimal":"","emptyTable":"No hay datos disponibles...","info":"Mostrando _START_ a _END_ de _TOTAL_ entradas","infoEmpty":"Mostrando 0 a 0 de 0 entradas","infoFiltered":"(filtrado de _MAX_ total de entradas)","infoPostFix":"","thousands":",","lengthMenu":"Mostrar _MENU_ entradas","loadingRecords": "Cargando...","processing":"Procesando datos...","search":"Busqueda:","zeroRecords":"No se encontraron coincidencias.","paginate": {"first": "Primer","last":"Ultimo","next":"Próximo","previous":"Anterior"}};
-            $('#rutas').DataTable( {
+            var datat = $('#rutas').DataTable( {
                 "processing": true,
                 "serverSide": true,
                 "ordering": false,
                 "ajax": "<?=site_url('ajax_request/get_fechas_programacion')?>",
                 "language": es
                 });
+            setInterval( function () {datat.ajax.reload( null, false ); }, 15000 );
+            
                 $("#crearRecoleccionButton").on('click', function(){
                   var data = $('#recoleccion_form').serialize();
                   $("#loader_recoleccion").fadeIn();

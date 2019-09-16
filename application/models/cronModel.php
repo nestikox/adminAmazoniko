@@ -20,6 +20,8 @@ class CronModel extends CI_Model
         * y generar nueva fecha, tomando en cuenta si la fecha tiene recoleccion creada o no en caso
         * de tener recoleccion el estado queda en 3 en caso contrario el estado queda en 2
         */
+        /*vencer o finalizar las recolecciones pasadas de fecha*/
+        $this->finalizarRecoleccionesActuales();
         $today = date('Y-m-d');
         $q1 ="select pf.* from a007_programaciones_fecha pf
                 inner join a006_programaciones p on pf.programacion_id = p.id
@@ -35,6 +37,7 @@ class CronModel extends CI_Model
                     $this->cambiarEstadoFecha($v1->id, 4);
                     /* comprobar ultima fecha y crear nueva fecha a partir de la ultima */
                     $in = $this->generarNuevaFecha($v1->programacion_id);
+                    
                     echo $v1->nuevafecha." Dia vencido con Recoleccion. nueva fecha id -> ".$in."<br>";
                 }else{
                     /* NO existe recoleccion cerrar fecha en estado 2 = vencida */
@@ -121,4 +124,30 @@ left join usuarios r on r.id = a.id_recolector');
 		}
   echo $i." actualizaciones";*/
 	}
+ public function finalizarRecoleccionesActuales(){
+  $q="SELECT r.id FROM a009_recolecciones r 
+   left join a007_programaciones_fecha pf on pf.id = r.fecha_id 
+   where pf.nuevafecha < current_date() and r.estado not in(4,5);";
+   /* not in FINALIZADA, o VENCIDA */
+  $qr = $this->db->query($q);
+  $res = $qr->result();
+  $nr = $qr->num_rows();
+   if($nr>0){
+    foreach($res as $k => $v){
+      echo 'recoleccion <b>#'.$v->id.'</b> Vencida <br>';
+      $this->cambiarEstadoRecoleccion($v->id, 5);
+     } 
+   }
+ }
+ 
+ public function cambiarEstadoRecoleccion($idR, $estado){
+  $e = array('estado'=>$estado);
+  $this->db->where('id', $idR);
+  if($this->db->update('a009_recolecciones', $e)){
+    return true;
+   }else{
+    return false;
+   }
+ }
+ 
 }

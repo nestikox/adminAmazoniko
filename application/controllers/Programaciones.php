@@ -65,6 +65,33 @@ class Programaciones extends CI_Controller
 		/* Si es administrador listar las programaciones */
 		$this->load->view('sistema/recolectores/recolecciones', $head);
 	}
+	public function recolectar($idR=0){
+		if($idR>0){
+			$idUser = $this->session->userdata('user_id');
+			/* primeramente validamos que la recoleccion existe y la fecha es la actual*/
+			$validacion1 = $this->programacionModel->validarFechasRecoleccion($idR);
+			if($validacion1){
+				/* luego de determinar que la fecha es correcta cambiar el estado a ACTIVA */
+				$this->programacionModel->validarActivarRecoleccion($idR);
+				$headData = array('titulo_pagina' => 'Recolección '.$idR.'- Amazoniko');
+				/*HEADER*/
+				$headerData = array('prog_sel'=> 'active');
+				/* CONTENIDO ESTATICO */
+				$head = array('head'=>$this->load->view('sistema/static/head',$headData,true), 'header'=>$this->load->view('sistema/static/header',$headerData,true));
+				if(isset($_SESSION['message'])){$head['message'] = $_SESSION['message'];}
+				$head['usuarioRecolector'] = $idUser;
+				$head['idRecoleccion'] = $idR;
+				/* Si es administrador listar las programaciones */
+				$this->load->view('sistema/recolectores/recolectar', $head);
+			}else{
+				$this->session->set_flashdata('message', 'Fecha de recoleccion Invalida');
+				redirect('programaciones/recolectores');		
+			}
+		}else{
+			$this->session->set_flashdata('message', 'No hay recoleccion para procesar');
+			redirect('programaciones/recolectores');		
+		}
+	}
 	
 	public function listarFechas(){
 		$this->load->model('usuariosModel');
@@ -133,7 +160,8 @@ class Programaciones extends CI_Controller
 				redirect('programaciones');		
 			}
 	}
-
+	
+	
 	public function guardarProgramacionNueva(){
 		/* DATOS DE RECOLECCION */
 		$datos_recoleccion = array('ruta_id'=>filter_input(INPUT_POST, 'ruta'),'recolector'=>filter_input(INPUT_POST, 'recolector'),'fecha'=>filter_input(INPUT_POST, 'fecha_inicial'),'estado'=>1);
