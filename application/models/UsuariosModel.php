@@ -21,6 +21,18 @@ class usuariosModel extends CI_Model {
             return $r->result();
         endif;
 	}
+    
+    public function correoValidoNuevo($email){
+            $q ="SELECT * FROM users where email = '$email';";
+            $r = $this->db->query($q);
+            $n = $r->num_rows();
+            if($n>0){
+                /* si existe algun correo como el que quieren registrar entonces no es valido*/
+                return 0;
+            }else{
+                return 1;
+            }
+    }
     public function actualizarEstado($id, $estado){
         $this->db->where('id',$id);
         if($this->db->update('users', $estado)){
@@ -148,16 +160,47 @@ class usuariosModel extends CI_Model {
         }
         return $resultado;
     }
+    public function getZonasOptions($id){
+          $q="select id, nombre from a003_zonas where activo =1;";
+        $r1=$this->db->query($q);
+        $rutas = $r1->result();
+        $resultado = "";
+        foreach($rutas as $k=> $v){
+               $resultado.="<option value='".$v->id."' ".($this->check_zonaAsignada($v->id,$id)?'selected':'').">".$v->nombre."</option>";
+        }
+        return $resultado;
+    }
     
-    public function actualizarParaderoUsuario($id, $ruta){
+     public function check_zonaAsignada($idZona, $idUsuario){
+        $q="select z.id, z.nombre from a005_usuario_zonas uz
+            left join a003_zonas z on z.id = uz.zona
+            left join users u on u.id = uz.usuario 
+            where z.id =$idZona and u.id =$idUsuario";
+        $r1=$this->db->query($q);
+        $conteo = $r1->num_rows();
+        if($conteo>0){
+            return true;
+        }else{
+            return false;
+        }
+    }
+    public function actualizarParaderoUsuario($id, $dataParadero, $t=1){
         $this->db->where('usuario_id', $id);
-        $data= array('id_ruta'=>$ruta);
-        $this->db->update('a002_paraderos', $data);
+        if($t==1){
+            $data= array('id_ruta'=>$dataParadero);
+            $this->db->update('a002_paraderos', $data);
+        }else{
+            $this->db->update('a002_paraderos', $dataParadero);
+        }
     }
     
     public function delUsuarioRutas($idUsuario){
         $this->db->where('usuario_id', $idUsuario);
         $this->db->delete('a005_usuario_rutas');
+    }
+    public function delUsuarioZonas($idUsuario){
+        $this->db->where('usuario', $idUsuario);
+        $this->db->delete('a005_usuario_zonas');
     }
     
     public function asignarRutas($usuario, $ruta){
@@ -165,4 +208,10 @@ class usuariosModel extends CI_Model {
         $this->db->insert('a005_usuario_rutas',$data);
         $this->actualizarParaderoUsuario($usuario,$ruta);
     }
+    public function asignarZonas($usuario, $zona){
+        $data = array('usuario'=>$usuario, 'zona'=>$zona);
+        $this->db->insert('a005_usuario_zonas',$data);
+        /*$this->actualizarParaderoUsuario($usuario,$ruta);*/
+    }
+    
 }

@@ -5,22 +5,6 @@
 .bar {height: 18px;background: green;}
 /* Set the size of the div element that contains the map */
 #map {height: 250px;  /* The height is 400 pixels */width: 90%;margin: 0px auto;/* The width is the width of the web page */}
-.form-control2, .select {
-    display: block; height: 34px; padding: 6px 12px; font-size: 14px; line-height: 1.42857143; color: #555; background-color: #fff; background-image: none;
-    border: 1px solid #ccc; border-radius: 4px; -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075); box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
-    -webkit-transition: border-color ease-in-out .15s,-webkit-box-shadow ease-in-out .15s;
-    -o-transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
-    transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;}
-.no-paddin-on-sides{
-  padding-left:0px!important;
-  padding-right:0px!important;
-}
-.no-padding-right{
-  padding-right:0px!important;
-}
-.no-padding-left{
-  padding-left:0px!important;
-}
 </style>
 <div class="wrapper">
   <?php echo $header;?>
@@ -123,6 +107,7 @@
 								<a class="pull-right btn btn-warning volver"  href="<?php echo site_url('usuarios');?>">Volver</a>
               </div>
             </form>
+				
           </div>
           <!-- /.box -->
         </div>
@@ -139,20 +124,60 @@ $(document).ready(function(){
       var pwr2 = $("#InputPassword2").val();
       var cel = $("#celular").val();
       
-      if(nombre.length<2){ alert('Debe especificar su nombre para continuar');$("#nombre").focus();return;}
-      if(apelli.length<2){alert('Debe especificar su apellido para continuar');$("#apellido").focus();return;}
-      if(ident.length<2){alert('numero de identidad es requerido');$("#ident").focus();return;}
-      if(cel.length<2){alert('Por favor proporcione un n&uacute;mero de contacto');$("#cel").focus();return;}
+      if(nombre.length<2){
+        alert('Debe especificar su nombre para continuar');
+        $("#nombre").focus();
+        return;
+      }
+      if(apelli.length<2){
+        alert('Debe especificar su apellido para continuar');
+        $("#apellido").focus();
+        return;
+      }
+      if(ident.length<2){
+        alert('numero de identidad es requerido');
+        $("#ident").focus();
+        return;
+      }
+      if(cel.length<2){
+        alert('Por favor proporcione un numero de contacto');
+        $("#cel").focus();
+        return;
+      }
       if(pwr.length>2){
-        if(pwr.length<7){alert('La clave debe contener 8 caracteres m&iacute;nimo.');$("#InputPassword1").focus();return;}  
-        if(pwr != pwr2){alert('Las claves no coinciden.');$("#InputPassword1").focus();return;}  
+        if(pwr.length<7){
+        alert('La clave debe contener 8 caracteres minimo.');
+        $("#InputPassword1").focus();
+        return;
+        }  
+        if(pwr != pwr2){
+        alert('Las claves no coinciden.');
+        $("#InputPassword1").focus();
+        return;
+        }  
       }
       $("#actualizar_usuario_form").submit();
-    });
+      
+      });
+  
+  /*$('#fileupload').fileupload({
+        dataType: 'json',
+        done: function (e, data){
+            $.each(data.result.files, function (index, file) {
+                $('<p/>').text(file.name).appendTo(document.body);
+            });
+        }
+				progressall: function (e, data) {
+        var progress = parseInt(data.loaded / data.total * 100, 10);
+        $('#progress .bar').css(
+            'width',
+            progress + '%'
+        );
+      }});*/
 });
 </script>
       <!-- /.row -->
-      <?php if($this->ion_auth->in_group('members')){ ?>
+     
       <div class="row">
         <!-- left column -->
         <form id="recoleccion_form" enctype="multipart/form-data" method="POST" action="<?php echo site_url('programacion/guardarParaderoUsuario');?>">
@@ -160,50 +185,32 @@ $(document).ready(function(){
           <!-- general form elements -->
             <div class="box box-primary">
             <div class="box-header">
-                <h4>Informaci&oacute;n de recolecci&oacute;n</h4>
+                <h4>Informacion de recoleccion</h4>
+                
               </div>
               <div class="box-body">
               <div class="col-md-6">
-              <label>Direcci&oacute;n</label>
-              <div class="row">
-                <div class="col-md-3 form-group no-padding-right">
-                  <select class="form-control" id="1" name="1">
-                    <option value="">Seleccione</option>
-                    <option value="Avenida">Avenida</option>
-                    <option value="Calle">Av. Calle</option>
-                    <option value="Carrera">Av. carrera</option>
-                    <option value="Calle">Calle</option>
-                    <option value="kr">Carrera</option>
-                    <option value="Circular">Circular</option>
-                    <option value="Diagonal">Diagonal</option>
-                    <option value="Transversal">Transversal</option>
-                  </select>
-                </div>
-                <div class="col-md-3 form-group no-paddin-on-sides">
-                  <input type="text" class="form-control no-paddin-on-sides" id="2" name="2" value="">
-                </div>
-               <div class="col-md-1 form-group">#</div>
-               <div class="col-md-2 no-paddin-on-sides">
-                <input type="text" class="form-control no-paddin-on-sides" id="3" name="3" value="">
-               </div>
-                <div class="col-md-1 form-group">-</div>
-                <div class="col-md-2 no-padding-left">
-                  <input type="text" class="form-control no-paddin-on-sides" id="4" name="4" value="">
-                </div>
-						</div>
-              <div class="row">
                   <div class="col-md-12 form-group">
-                    <input type="text" class="form-control" placeholder="Calle 100 # 12-45" id="direccion_paradero" name="direccion_paradero" value="<?php echo isset($paradero->address)?$paradero->address:''?>">
+                      <label>Direcci&oacute;n</label>
+                      <input type="text" class="form-control" placeholder="Calle 100 # 12-45" id="direccion_paradero" name="direccion_paradero" value="<?php echo isset($paradero->address)?$paradero->address:''?>">
                   </div>
-              </div>
-              <div class="col-md-6 form-group">
-                <label>Tipo de vivienda</label><br>
-                  <input type="radio" name="tipo_vivienda" value="Casa" <?php echo (isset($paradero->tipo_vivienda) and $paradero->tipo_vivienda=='Casa')?'checked':'';?>>&nbsp;<i class="fa fa-home"></i> Casa
-                  <span class="checkmark"></span>
-                  <br>
-                  <input type="radio" name="tipo_vivienda" value="Apartamento" <?php echo (isset($paradero->tipo_vivienda) and $paradero->tipo_vivienda=='Apartamento')?'checked':'';?>>&nbsp;<i class="fa fa-building"></i> Apartamento
-                  <span class="checkmark"></span>
-              </div>
+                  <div class="col-md-6 form-group">
+                      <label>Tipo de vivienda</label><br>
+
+						 <!--<div class="input-group">
+							<input type="radio" name="tipo_vivienda" value="casa" <?php echo (isset($paradero->tipo_vivienda) and $paradero->tipo_vivienda=='Casa')?'checked':'';?>>
+							<label style="width: 50%;" for="casa"><span><i class="fa fa-home"></i>Casa</span></label>
+							<input type="radio" name="tipo_vivienda" value="apartamento" <?php echo (isset($paradero->tipo_vivienda) and $paradero->tipo_vivienda=='Apartamento')?'checked':'';?>>
+							<label style="width: 50%;" for="apartamento"><span><i class="fa fa-building"></i>Apto</span></label>
+						  </div>-->
+
+
+                      <input type="radio" name="tipo_vivienda" value="Casa" <?php echo (isset($paradero->tipo_vivienda) and $paradero->tipo_vivienda=='Casa')?'checked':'';?>>&nbsp;<i class="fa fa-home"></i> Casa
+                      <span class="checkmark"></span>
+                      <br>
+                      <input type="radio" name="tipo_vivienda" value="Apartamento" <?php echo (isset($paradero->tipo_vivienda) and $paradero->tipo_vivienda=='Apartamento')?'checked':'';?>>&nbsp;<i class="fa fa-building"></i> Apartamento
+                      <span class="checkmark"></span>
+                  </div>
                   <div class="col-md-6 form-group">
                       <label>Nombre conjunto / edificio</label>
                       <input type="text" class="form-control" placeholder="Edificio monaco" id="nombre_paradero" name="nombre_paradero" value="<?php echo isset($paradero->nombre)?$paradero->nombre:''?>">
@@ -243,7 +250,7 @@ $(document).ready(function(){
             </div>
           </form><!-- fin del formulario de recoleccion -->
         </div>
-      <?php } ?>
+     
     </section>
     <!-- /.content -->
   </div>
@@ -260,20 +267,7 @@ $(document).ready(function(){
 <script src="<?php echo base_url('resources/');?>dist/js/adminlte.min.js"></script>
 
 <script>
-  $("#1,#2,#3,#4").on('keyup', function(){armarDireccion()});
-  $("#1,#2,#3,#4").on('change', function(){armarDireccion()});
-  function armarDireccion(){
-    var a1,a2,a3,a4,dir='';
-    $("#direccion_paradero").val('');
-    a1=$("#1").val();a2=$("#2").val();a3=$("#3").val();a4=$("#4").val();
-    if(a1.length>0){ dir+=a1; }else{ return $("#1").focus();}
-    if(a2.length>0){ dir+=' '+a2; }
-    if(a3.length>0){ dir+=' # '+a3; }
-    if(a4.length>0){ dir+=' - '+a4; }
-    $("#direccion_paradero").val(dir);
-    $("#direccion_paradero").trigger('change');
-  }
-	// Initialize and add the map 
+						// Initialize and add the map 
   var map, map2,infoWindow;
   var input = document.getElementById('direccion_paradero');
   var marcadores = <?=isset($map)?$map:'""'?>;

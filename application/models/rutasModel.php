@@ -20,6 +20,7 @@
           $q="select ruta_id from a005_usuario_rutas where usuario_id =".$u;
           $qr = $this->db->query($q);
           $qresult = $qr->row();
+          var_dump($q);
           return $qresult->ruta_id;
         }
 				 public function getRutas($id=0){
@@ -51,18 +52,51 @@
 					}
 				return $retorno;
 				}
-        public function getParaderos($idruta){
-            
-            $response = array();
-            $q="select * from a002_paraderos where id_ruta =$idruta;";
-            $r =  $this->db->query($q);
-            $paraderos = $r->result();
-            /* Resultado Comun*/
-            $response['result'] = $paraderos;
-            /* Ordenar datos para MAPA*/
-            $resnum = $r->num_rows();
-            $retorno="[";
-                $i=0;
+        
+        public function getPoligonZonaArray($idZona){
+          $q="SELECT * FROM amazoniko2.a004_zona_coordenadas where co_zona =".$idZona." order by id004 asc";
+				$r = $this->db->query($q);
+				$poligon = $r->result();
+				$retorno=array();
+				$i=0;
+          foreach($poligon as $k => $v){
+            array_push($retorno,$v->lat." ".$v->lng);
+          }
+          return $retorno;
+        }
+        
+    public function getParaderoUsuario($idusuario){
+      $q="select * from a002_paraderos where usuario_id =$idusuario;";
+      $r =$this->db->query($q);
+      $n = $r->num_rows();
+      if($n>0){
+        return $r->row();
+      }else{
+        return false;
+      }
+    }
+        
+    public function asignarZonaParadero($u, $z){
+      $this->db->where('usuario_id', $u);
+      if($this->db->update('a002_paraderos', array('zona'=>$z))){
+        return true;
+      }else{
+        return false;
+      }
+    }
+        
+    public function getParaderos($idruta){
+      
+      $response = array();
+      $q="select * from a002_paraderos where id_ruta =$idruta;";
+      $r =  $this->db->query($q);
+      $paraderos = $r->result();
+      /* Resultado Comun*/
+      $response['result'] = $paraderos;
+      /* Ordenar datos para MAPA*/
+      $resnum = $r->num_rows();
+      $retorno="[";
+        $i=0;
                 if($resnum>0){
                     foreach($paraderos as $k=>$v){
                         if($i>0){
@@ -87,6 +121,14 @@
 							return $this->db->error();
 						}
 				}
+      public function actualizarDatosUsuario($id,$data){
+        $this->db->where('id', $id);
+					if($this->db->update('users',$data)){
+						return true;
+					}else{
+						return false;
+					}
+      }
 				
 			public function guardarParaderoAjax($paradero){
 				if($this->db->insert('a002_paraderos',$paradero)){
@@ -103,6 +145,7 @@
 						return false;
 					}
 			}
+      
 			public function chequearParaderoExiste($ruta, $numeroParadero){
 			$q="select * from a002_paraderos where id_ruta =$ruta and ordenamiento = $numeroParadero";
 			$r =  $this->db->query($q);
@@ -117,15 +160,30 @@
 		public function chequearParaderoExisteUsuario($id_Usuario){
 			$q="select * from a002_paraderos where usuario_id =$id_Usuario";
 			$r =  $this->db->query($q);
-			$res = $r->result();
+			$res = $r->row();
+			$resnum = $r->num_rows();
+      $q2="SELECT phone, rut FROM amazoniko2.users where id=$id_Usuario";
+			$r2 =  $this->db->query($q2);
+      $res2 = $r2->row();
+      $retorno = false;
+			if($resnum>0){ $retorno = true;}else{return false;}
+      if(strlen($res2->phone)>2){ $retorno = true;}else{ return false;}
+      if(strlen($res2->rut)>2){ $retorno = true;}else{  return false; }
+      if($res->zona!=0 or strlen($res->zona)>0){ $retorno = true;}else{  return false; }
+      return $retorno;
+		}
+    
+		public function checkParaderoUsuario($usuario){
+     $q="select * from a002_paraderos where usuario_id =$usuario";
+			$r =  $this->db->query($q);
+			$res = $r->row();
 			$resnum = $r->num_rows();
 			if($resnum>0){
-					return true;/* devolver true por que hay un paradero con ese numero de usuario */
+					return $res->ida002_paraderos;/* devolver true por que hay un paradero con ese numero de parada */
 				}else{
-					return false;/* devolver false por que no hay paradero con ese numero de usuario */
+					return false;/* devolver false por que no hay paradero con ese numero de parada */
 				}
-		}
-		
+    }
 		public function guardarRuta($ruta, $paraderoInicial){/* RUTAS */
 			$arrayResult = array();
 			if($this->db->insert('a001_ruta', $ruta)){
@@ -154,6 +212,24 @@
 				 return $arrayResult;
 			 }
 		}
+    /* coordenadas juntas seperadas por espacio */
+    public function getCoordZonaSep($id){
+      $q="SELECT concat(lat,' ',lng) as coordenadas FROM amazoniko2.a004_zona_coordenadas where co_zona =$id;";
+      $query = $this->db->query($q);
+      $res = $query->result();
+      $result = array();
+      foreach($res as $k=>$v){
+        $result[] = $v->coordenadas;
+      }
+      return $result;
+    }
+    /* coordenadas sin arreglo */
+    public function getCoordZona($id){
+      	$q ="select * from a004_zona_coordenadas where co_zona =$id;";
+        $r = $this->db->query($q);
+        return $r->result();
+    }
+    
 		public function getZonas($id=0){
 				if($id!=0){
 						$q ="SELECT * FROM a003_zonas where id =".$id;
@@ -178,11 +254,14 @@
 				$this->db->insert('a004_zona_coordenadas', $dataIn );
 			}
 		public function getRecoleccionZona($id){
-			$q="SELECT p.id, p.dia, pf.nuevafecha as proxima_programacion, r.fecha proxima_recoleccion, p.repetir FROM a006_programaciones p
+			$q="SELECT p.id, p.dia, pf.nuevafecha as proxima_programacion, p.repetir FROM a006_programaciones p
 			left join a007_programaciones_fecha pf on pf.programacion_id = p.id 
-			left join a009_recolecciones r on r.programacion_id = p.id where p.zona =$id;";
-
+			left join a009_recolecciones r on pf.id = r.fecha_id 
+            where p.zona =$id 
+            and pf.nuevafecha between current_date() and DATE_ADD(current_date(), INTERVAL 16 DAY)
+            and pf.estado in(1,2)";
 			$rq = $this->db->query($q);
+      return $rq->result();
 		}
 
 		public function guardarZona($data){
@@ -286,9 +365,21 @@
     }
     return $result;
   }
+   public function getProgramacionZona($z){
+    $result = array();
+    $q="select * from a006_programaciones where zona=$z ;";
+    $qr = $this->db->query($q);
+    $nr =  $qr->num_rows();
+    $r1 = $qr->row();
+    $result['programacion'] = $r1;
+    if($nr>0){
+      $result['fechas'] = $this->getProximasFechas($r1->id);
+    }
+    return $result;
+  }
   
   public function getProximasFechas($pid){
-    $q="select * from a007_programaciones_fecha where programacion_id=$pid and nuevaFecha > DATE_ADD('".date('Y-m-d')."', INTERVAL -2 DAY) order by nuevafecha asc;";
+    $q="select * from a007_programaciones_fecha where programacion_id=$pid and nuevaFecha >= current_date() order by nuevafecha asc;";
     $qr = $this->db->query($q);
     return $qr->result();
   }

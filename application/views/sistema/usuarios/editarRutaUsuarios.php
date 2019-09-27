@@ -22,7 +22,7 @@
           <!-- general form elements -->
           <div class="box box-primary">
             <!-- form start -->
-            <form role="form" enctype="multipart/form-data" method="POST" action="<?php echo site_url('usuarios/guardarUsuarioRutas');?>">
+            <form role="form" enctype="multipart/form-data" method="POST" action="<?php echo site_url('usuarios/guardarUsuarioZona');?>">
               <div class="box-body">
                 <div class="col-md-4 form-group">
                   <label>Nombres</label>
@@ -42,7 +42,7 @@
                   <input type="text" class="form-control" placeholder="tipo de Usuario" value="<?php echo $usuario->grupo;?>" readonly>
                 </div>-->
                   <div class="col-md-8 form-group">
-                  <label>Rutas Disponibles:</label>
+                  <label>Zonas Disponibles:</label>
                   <select id="selectable" name="rutasUsuario[]" class="form-control" <?php if($usuario->grupo=='recolectores' or $usuario->grupo=='admin'){ echo "multiple";}?>>
                     <?php echo $rutasOp;?>
                   </select>

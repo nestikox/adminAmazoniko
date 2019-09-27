@@ -62,10 +62,9 @@ echo $head;?>
                 <table id="rutas" class="display hover responsive cell-border">
                                 <thead>
                                     <tr>
-                                        <th>RID</th>
-                                        <th>PID</th>
-                                        <th>Fecha</th>
-                                        <th>Ruta</th>
+                                        <th><i class="fa fa-user"></i></th>
+                                        <th><i class="fa fa-calendar"></i></th>
+                                        <th>Zona</th>
                                         <th>Estado</th>
                                         <th>Opciones</th>
                                     </tr>

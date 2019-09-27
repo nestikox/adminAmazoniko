@@ -8,6 +8,7 @@ class Ajax_request extends CI_Controller
         parent::__construct();
         $this->load->model('ajaxRequestModel');
 		$this->load->helper('url');
+        $this->load->library('session');
     }
     public function getHistorial($idUser=0){
         $request = $_REQUEST;/*pedidos de datatable*/
@@ -37,6 +38,7 @@ class Ajax_request extends CI_Controller
         $subdata[] = $r->calificacion;
         $subdata[] = $r->puntos;
         $subdata[] = $r->time;
+        $subdata[] = $r->comentario;
         $data[] = $subdata;
     }
             
@@ -230,6 +232,13 @@ class Ajax_request extends CI_Controller
          echo $response; die(); /* for some reason i have to kill the process in this case or it will redirect so it wont work */
          //die($this->output->set_content_type('application/json')->set_output());
      }
+    
+    public function validarCorreoE(){
+        $this->load->model('usuariosModel');
+		$email = $_POST['correo'];
+		$res = array('valido'=>$this->usuariosModel->correoValidoNuevo($email));
+		echo json_encode($res);
+	}
 	public function pag_historial(){
 		 $request = $_REQUEST;/*pedidos de datatable*/
              $data = array();
@@ -282,6 +291,8 @@ class Ajax_request extends CI_Controller
         $this->load->model('programacionModel');
         /* cambiar el estado a finalizada */
         $this->programacionModel->cambiarEstadoRecoleccion($id, 4);
+        /* asignar los puntos a usuarios */
+        $this->programacionModel->asignarPuntosRecoleccion($id);
         $r = array();
         $r['c']=1;
         $r['url']=site_url('programaciones/recolectores');
@@ -321,11 +332,11 @@ class Ajax_request extends CI_Controller
         }
     }
     
-    public function pag_rutas_usuarios(){
+    public function pag_zonas_usuarios(){
         $request = $_REQUEST;/*pedidos de datatable*/
         $data = array();
         /* AREA DE ARMADO DE LOS QUERYS DE CONSULTA */
-        $q = "SELECT u.* FROM users u left join users_groups ug on u.id = ug.user_id where group_id in (2,3) ";
+        $q = "SELECT u.* FROM users u left join users_groups ug on u.id = ug.user_id where group_id in (3) ";
         $totalData=$this->ajaxRequestModel->request_conteo($q);
         /* si existe una busqueda agregar los campos para filtrar resultados */
         /* AREA DE FILTROS */
@@ -346,8 +357,8 @@ class Ajax_request extends CI_Controller
             $subdata[] = $r->first_name." ".$r->last_name;
             $subdata[] = $r->email;
             /* obtener las rutas del usuarios */
-            $rutas = $this->ajaxRequestModel->getUsuarioRutasConcat($r->id);
-            $subdata[] = strlen($rutas)>3?$rutas:'No tiene Rutas asignadas...';
+            $rutas = $this->ajaxRequestModel->getUsuarioZonasConcat($r->id);
+            $subdata[] = strlen($rutas)>3?$rutas:'No tiene Zonas asignadas...';
             /* OPCIONES MAS LARGO */
             $edicionUsuarioUrl = site_url('usuarios/editarRutaUsuarios/'.$r->id);
             $subdata[] = '<a href="'.$edicionUsuarioUrl.'" ><i class="fa fa-edit"> Editar</i></a>';
@@ -436,13 +447,17 @@ class Ajax_request extends CI_Controller
         $request = $_REQUEST;/*pedidos de datatable*/
         $data = array();
         /* AREA DE ARMADO DE LOS QUERYS DE CONSULTA */
-        $q = "SELECT d.id as idRecoleccion,d.estado as estadoCodigo,d.*,f.nombre as estadoRecoleccion, c.*, e.nombre, d.id as idRecoleccion FROM a005_usuario_rutas a
-            left join a001_ruta e on a.ruta_id = e.ida001_ruta
-            left join a006_programaciones b on a.ruta_id = b.ruta
-            left join a007_programaciones_fecha c on c.programacion_id = b.id
-            left join a009_recolecciones d on d.fecha_id = c.id
-            left join a010_recoleccion_estado f on d.estado = f.id
-            where a.usuario_id =$idUsuario and d.id is not null and c.nuevafecha BETWEEN DATE_ADD(current_date(), INTERVAL -50 DAY) AND DATE_ADD(current_date(), INTERVAL 16 DAY) ";
+        $q = "select d.id as idRecoleccion,d.estado as estadoCodigo,d.*,f.nombre as estadoRecoleccion, c.*, z.nombre, d.id as idRecoleccion,
+        (select count(id) from a010_recoleccion_usuarios where recoleccion = d.id) as usuariosRecoleccion
+        from  a006_programaciones b
+       left join a007_programaciones_fecha c on c.programacion_id = b.id
+       left join a009_recolecciones d on d.fecha_id = c.id
+       left join a010_recoleccion_estado f on d.estado = f.id
+       left join a005_usuario_zonas uz on b.zona = uz.zona
+       left join a003_zonas z on uz.zona = z.id
+       where uz.usuario=$idUsuario and d.id is not null 
+       and c.nuevafecha BETWEEN DATE_ADD(current_date(), INTERVAL -50 DAY) AND DATE_ADD(current_date(), INTERVAL 16 DAY) ";
+
         $totalData=$this->ajaxRequestModel->request_conteo($q);
         /* si existe una busqueda agregar los campos para filtrar resultados */
         /* AREA DE FILTROS */
@@ -450,15 +465,14 @@ class Ajax_request extends CI_Controller
             $q.=" and (d.id like '".$request['search']['value']."%')";
         }
         /* PAGINACION */
-        $q.=" order by nuevafecha desc limit ".$request['start'].",".$request['length']." ";
+        $q.=" order by nuevafecha asc limit ".$request['start'].",".$request['length']." ";
         $rs = $this->ajaxRequestModel->request($q);
         $totalFiltered=$this->ajaxRequestModel->request_conteo($q);
         $rutas = "";
         /* Ordenar los resultados para ser procesados */
         foreach($rs as $k=>$r){
             $subdata = array();
-            $subdata[] = $r->idRecoleccion;
-            $subdata[] = $r->programacion_id;
+            $subdata[] = $r->usuariosRecoleccion;
             $subdata[] = $r->nuevafecha;
             $subdata[] = $r->nombre;
             $subdata[] = $r->estadoRecoleccion;
@@ -487,6 +501,7 @@ class Ajax_request extends CI_Controller
           'recoleccion_id' => $id,
           'usuario_id' => $_POST['paradero'],
           'recolector_id' => $_POST['recolector'],
+          'comentario'=> $_POST['comentario'],
           'estado' =>1,
           'bolsa_a' =>$_POST['bolsaa'],
           'bolsa_b' =>$_POST['bolsab'],
@@ -507,7 +522,50 @@ class Ajax_request extends CI_Controller
             echo json_encode($result);
         }
     }
-    
+    public function pagParaderosLive($idR){
+        $request = $_REQUEST;/*pedidos de datatable*/
+        $data = array();
+        /* AREA DE ARMADO DE LOS QUERYS DE CONSULTA */
+        $q = "select ru.recoleccion, p.direccion, p.lat,p.lon, u.first_name, 
+            u.last_name, u.rut, u.phone, u.tipo_vivienda,u.address_detail,
+            (select count(id) from a010_recoleccion_data where recoleccion_id=ru.recoleccion and usuario_id=ru.usuario) as procesado
+             from a010_recoleccion_usuarios ru
+            left join a002_paraderos p on p.usuario_id = ru.usuario
+            left join users u on ru.usuario = u.id
+            where ru.recoleccion =$idR ";
+        $totalData=$this->ajaxRequestModel->request_conteo($q);
+        /* AREA DE FILTROS */
+        if(!empty($request['search']['value'])){
+            $q.=" and (d.id usuario_id '".$request['search']['value']."%')";
+        }
+        /* PAGINACION */
+        $q.=" limit ".$request['start'].",".$request['length']." ";
+        $rs = $this->ajaxRequestModel->request($q);
+        $totalFiltered=$this->ajaxRequestModel->request_conteo($q);
+        $rutas = "";
+        /* Ordenar los resultados para ser procesados */
+        foreach($rs as $k=>$r){
+            $subdata = array();
+            $subdata[] = $r->first_name.' '.$r->last_name;
+            $subdata[] = $r->direccion;
+            $subdata[] = $r->phone;
+            $iconProcesado = "";
+            if($r->procesado>0){
+                $iconProcesado = "<i class='fa fa-check-square' style='color:green;' title='RECOLECCION PROCESADA'></i>";
+            }else{
+                $iconProcesado = "<i class='fa fa-minus-square' style='color:orange;' title='NO PROCESADA LA RECOLECCION'></i>";
+            }
+            //$linkMap = "https://www.google.com/maps/search/?api=1&query=".$r->lat.",".$r->lon;
+            $linkMap = "http://maps.google.com/maps?t=h&q=loc:".$r->lat.",".$r->lon."&z=17";
+            $subdata[] = "<a href=".$linkMap." target='_blank'><i class='fa fa-map-marker' aria-hidden='true'></i></a>";
+            $subdata[] =$iconProcesado;
+            /* OPCIONES MAS LARGO */
+            /* FIN DE OPCIONES */
+            $data[] = $subdata;
+        }           
+        $results = array("draw"=> intval($request['draw']),"recordsTotal"=> intval($totalData),"recordsFiltered"=> intval($totalData),"data"=>$data);$response = json_encode($results);
+        echo $response;
+    }
     public function pagRecoleccionLive($idR){
         $request = $_REQUEST;/*pedidos de datatable*/
         $data = array();
@@ -529,17 +587,15 @@ class Ajax_request extends CI_Controller
         /* Ordenar los resultados para ser procesados */
         foreach($rs as $k=>$r){
             $subdata = array();
-            $subdata[] = $r->bolsa_a;
-            $subdata[] = $r->bolsa_b;
             $subdata[] = $r->peso_a;
             $subdata[] = $r->peso_b;
             $subdata[] = $r->calificacion;
             $subdata[] = $r->puntos;
-            $subdata[] = $r->ubicacion;
+            $subdata[] = $r->comentario;
             /* OPCIONES MAS LARGO */
             //$opciones = $this->filterOptionEstado($r->estadoCodigo, $r);
             /*$edicionUsuarioUrl = site_url('programacion/editarProgramacion/'.$r->id);*/
-            $subdata[] = 'opciones';
+            $subdata[] = $r->comentario;
             /* FIN DE OPCIONES */
             $data[] = $subdata;
         }           
@@ -570,7 +626,74 @@ class Ajax_request extends CI_Controller
             break;
         }
     }
-    
+    public function validateZona($lat_a='', $lng_a='', $type=1){
+		$zonaPunto = array();/* Arreglo para resultados */
+		$this->load->model('rutasModel');
+		$this->load->library('pointLocation');
+		$lat=''; $lng='';
+		/* detectar los datos de lat y lng */
+		if(isset($_POST['lat']) and strlen($_POST['lat'])>2){$lat = $_POST['lat'];}
+		elseif(isset($_GET['lat']) and strlen($_GET['lat'])>2){$lat = $_GET['lat'];}
+		if(isset($_POST['lng']) and strlen($_POST['lng'])>2){$lng = $_POST['lng'];}
+		elseif(isset($_GET['lng']) and strlen($_GET['lng'])>2){$lng = $_GET['lng'];}
+		if(strlen($lat_a)>2){$lat = $lat_a;}
+		if(strlen($lng_a)>2){$lng = $lng_a;}
+		/* si no existen los datos para procesar devolver error */
+		if(strlen($lat)<2 and strlen($lng)<2){
+			$zonaPunto['c']=0;
+			$zonaPunto['m']="No se han enviado datos para procesar.";
+			if($type==1){
+				echo json_encode($zonaPunto);
+				return;
+			}else{
+				return $zonaPunto;
+			}
+		}
+		/* DETECTOR DE PUNTOS EN POLIGONO */
+		$pl = new pointLocation();
+		/* PUNTO QUE SE VA A CONSULTAR */
+		$punto =$lat." ".$lng;
+		/* ARREGLO DE ZONAS EN LAS QUE SE CONSULTARA EL PUNTO */
+		$zon = $this->rutasModel->getZonas();
+		/* Verificar por cada zona */
+		foreach($zon as $k1 => $v1):
+			$polygon = $this->rutasModel->getCoordZonaSep($v1->id);
+			$in = $pl->pointInPolygon($punto, $polygon);
+			if($in==true){
+				$zonaPunto['c']=1;
+				$zonaPunto['zona']=$v1->id;
+				$zonaPunto['zonaNombre']=$v1->nombre;
+				$zonaPunto['m']=$v1->nombre." cubre el punto de recoleccion.";
+				break;
+			}else{
+				$zonaPunto['c']=0;
+				$zonaPunto['m']="No se han encontrado zonas para su lugar de recoleccion, por favor contacte Administrador.";
+			}
+		endforeach;
+		if($type==1){
+			echo json_encode($zonaPunto);
+			return;
+		}else{
+			return $zonaPunto;
+		}
+	}
+    public function asignarZona(){
+        $this->load->model('rutasModel');
+        $usuario = $_POST['usuario'];
+        $zona = $_POST['zona'];
+        if(strlen($usuario)>0 and strlen($zona)>0){
+            if($this->rutasModel->asignarZonaParadero($usuario, $zona)){
+                echo json_encode(array('c'=>1, 'm'=>' Zona Asignada'));
+                return;
+            }else{
+                echo json_encode(array('c'=>0, 'm'=>' No se pudo asignar la zona'));
+                return;
+            }
+        }else{
+                echo json_encode(array('c'=>0, 'm'=>' No se enviaron datos para procesar'));
+                return;
+        }
+    }
     public function postularRecoleccion(){
         $this->load->model('programacionModel');
         $idu = $_POST['usuario'];
@@ -732,9 +855,104 @@ class Ajax_request extends CI_Controller
         $prog = $this->programacionModel->getProgramacionesAdmin();
         echo $prog;
     }
+    public function getZonasCoords(){
+        $this->load->model('rutasModel');
+        $zonas = $this->rutasModel->getZonas();
+        $result = array();
+        foreach($zonas as $k1=>$v1){
+            $result[$v1->id] = array();
+            $result[$v1->id]['nombre'] = $v1->nombre;
+            $result[$v1->id]['id'] = $v1->id;
+            $result[$v1->id]['color'] = $v1->color;
+            $coords = $this->rutasModel->getCoordZona($v1->id);
+            $coordenadasJson = array();
+            $i = 0;
+            foreach($coords as $k2=>$v2){
+                $coordenadasJson[]=array($v2->lat,$v2->lng);
+                /*
+                if($i==0){
+                    $coordenadasJson.="{'".$v2->lat."','".$v2->lng."'}"; 
+                }else{
+                    $coordenadasJson.=",{'".$v2->lat."','".$v2->lng."'}"; 
+                }
+                $coordenadasJson.= "";*/
+                $i++;
+            }
+            $result[$v1->id]['data'] = $coordenadasJson;
+        }
+        
+        
+        echo json_encode($result);
+    }
+    
+    public function guardarProgramacionNueva(){
+        $programacion ='';
+        $this->load->model('cronModel');
+        $this->load->model('programacionModel');
+        $repetir = 1;
+        $fechainicial = filter_input(INPUT_POST, 'fecha');
+        $dia = filter_input(INPUT_POST, 'dia');
+        $zona = filter_input(INPUT_POST, 'zona');
+        /* primer paso consultamos si la programacion existe para actualizarla o crear */
+        $zonaValida = $this->programacionModel->getProgramacionZona($zona);
+        if($zonaValida!=false){
+            $programacion = $zonaValida->id;
+            /* borrar proximas fechas activas */
+            $this->programacionModel->borrarFechasActivasPorProgramacion($zonaValida->id);
+            /* borradas todas las fechas proximas creamos las nuevas */
+            /* datos para la tabla programacion */
+            $dataProg = array('dia'=>$dia);
+            $this->programacionModel->actualizarProgramacion($zonaValida->id,$dataProg);
+            /* datos para la tabla fechas estampar Fecha Inicial y correr CRON*/
+            $dataFecha = array(
+                'programacion_id'=>$zonaValida->id,
+                'nuevafecha'=>$fechainicial,
+                'estado'=>1
+            );
+            if($this->programacionModel->guardarNuevaFechaProgramacion($dataFecha)){
+                echo json_encode(array('code'=>1));
+            }else{
+                echo json_encode(array('code'=>0));
+            }
+        }else{
+            $userId = $this->session->userdata('user_id');
+            /*si no existe crear la programacion y la fecha*/
+            $dataProg = array('user_id'=>$userId,'zona'=>$zona,'dia'=>$dia);
+            $programacion = $this->programacionModel->guardarProgramacion($dataProg);
+            /* datos para la tabla fechas estampar Fecha Inicial y correr CRON*/
+            $dataFecha = array(
+                'programacion_id'=>$programacion,
+                'nuevafecha'=>$fechainicial,
+                'estado'=>1
+            );
+             if($this->programacionModel->guardarNuevaFechaProgramacion($dataFecha)){
+                echo json_encode(array('code'=>1));
+            }else{
+                echo json_encode(array('code'=>0));
+            }    
+        }
+      $this->cronModel->generarFechasNuevaProgramacion($programacion);
+	}
+    
+    public function getZonaCoordinates($id){
+         $this->load->model('rutasModel');
+        $coords = $this->rutasModel->getCoordZona($id);
+         $i = 0;
+         $coordenadasJson="[";
+          foreach($coords as $k2=>$v2){
+             if($i==0){
+                    $coordenadasJson.='{"lat":'.floatval($v2->lat).',"lng":'.$v2->lng.'}'; 
+                }else{
+                    $coordenadasJson.=',{"lat":'.$v2->lat.',"lng":'.$v2->lng.'}'; 
+                }
+                $i++;
+          }
+          $coordenadasJson.= "]";
+          echo $coordenadasJson;
+    }
     
     public function vcZona(){
-  
+        
     }
     public function crearRuta(){
    

@@ -47,5 +47,6 @@
     .faCancelada{ color:red; }
     .faFinalizada{ color:green; }
     .faVence{ color:orange;}
+    a.disabled{color: grey!important;}
   </style>
 </head>

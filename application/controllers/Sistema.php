@@ -19,25 +19,114 @@ class Sistema extends CI_Controller
 			return show_error('You must be an administrator to view this page.');
 		}*/
 	}
+	public function validateZona($lat_a='', $lng_a='', $type=1){
+		$zonaPunto = array();/* Arreglo para resultados */
+		$this->load->model('rutasModel');
+		$this->load->library('pointLocation');
+		$lat=''; $lng='';
+		/* detectar los datos de lat y lng */
+		if(isset($_POST['lat']) and strlen($_POST['lat'])>2){$lat = $_POST['lat'];}
+		elseif(isset($_GET['lat']) and strlen($_GET['lat'])>2){$lat = $_GET['lat'];}
+		if(isset($_POST['lng']) and strlen($_POST['lng'])>2){$lng = $_POST['lng'];}
+		elseif(isset($_GET['lng']) and strlen($_GET['lng'])>2){$lng = $_GET['lng'];}
+		if(strlen($lat_a)>2){$lat = $lat_a;}
+		if(strlen($lng_a)>2){$lng = $lng_a;}
+		/* si no existen los datos para procesar devolver error */
+		if(strlen($lat)<2 and strlen($lng)<2){
+			$zonaPunto['c']=0;
+			$zonaPunto['m']="No se han enviado datos para procesar.";
+			if($type==1){
+				echo json_encode($zonaPunto);
+				return;
+			}else{
+				return $zonaPunto;
+			}
+		}
+		/* DETECTOR DE PUNTOS EN POLIGONO */
+		$pl = new pointLocation();
+		/* PUNTO QUE SE VA A CONSULTAR */
+		$punto =$lat." ".$lng;
+		/* ARREGLO DE ZONAS EN LAS QUE SE CONSULTARA EL PUNTO */
+		$zon = $this->rutasModel->getZonas();
+		/* Verificar por cada zona */
+		foreach($zon as $k1 => $v1):
+			$polygon = $this->rutasModel->getCoordZonaSep($v1->id);
+			$in = $pl->pointInPolygon($punto, $polygon);
+			if($in==true){
+				$zonaPunto['c']=1;
+				$zonaPunto['zona']=$v1->id;
+				$zonaPunto['zonaNombre']=$v1->nombre;
+				$zonaPunto['m']=$v1->nombre." cubre el punto de recoleccion.";
+				break;
+			}else{
+				$zonaPunto['c']=0;
+				$zonaPunto['m']="No se ha encontrado las coordenadas | ".$punto;
+			}
+		endforeach;
+		if($type==1){
+			echo json_encode($zonaPunto);
+			return;
+		}else{
+			return $zonaPunto;
+		}
+	}
+	/* public function asignarZonas(){
+		$this->load->model('usuariosModel');
+		$usuarios = $this->usuariosModel->getUsuariosSistema();
+		$i=0;
+		foreach($usuarios as $k=>$v){
+			$p = $this->rutasModel->getParaderoUsuario($v->id);
+			if($p!=false){
+				echo "USUARIO ID:".$v->id;
+				$zona = $this->validateZona($p->lat, $p->lon, 2);
+				if($zona['c']==1){
+					$data = array('zona'=>$zona['zona']);
+					$this->usuariosModel->actualizarParaderoUsuario($v->id, $data, 2);
+					echo " asignada ".$zona['zonaNombre']."<br>";
+				}
+				$i++;
+			}else{
+				echo "<br>";
+			}
+		}
+	}*/
 	
 	public function index(){
+		$this->load->model('programacionModel');
 		$id = $this->session->userdata('user_id');
 		/*HEAD*/
 		$headData = array('titulo_pagina' => 'Tablero Principal - Amazoniko');
 		/*HEADER*/
 		$headerData = array('op_dashboard'=> 'active');
+		if(!$this->rutasModel->chequearParaderoExisteUsuario($id)){
+				$headerData['valid']=0;
+			}else{
+				$headerData['valid']=1;
+		}
 		/* CONTENIDO ESTATICO */
 		$head = array('head'=>$this->load->view('sistema/static/head',$headData,true),
 					  'header'=>$this->load->view('sistema/static/header',$headerData,true));
+		if(!$this->rutasModel->chequearParaderoExisteUsuario($id)){
+			$head['a']=1;
+		}
 		/* USUARIO COMUN */
 		if($this->ion_auth->in_group('members')){
-			if(!$this->rutasModel->chequearParaderoExisteUsuario($id)){
-				$head['a']=1;			
+			if(isset($_GET['i']) and $_GET['i']==1){
+				if(!$this->rutasModel->chequearParaderoExisteUsuario($id)){
+					/* los datos no estan correctos pedir actualizacion*/
+					$head['w']=0;
+					$head['a']=1;
+					}else{
+					/* todo bien continuar */
+					$head['w']=1;
+					$head['a']=0;
+				}
 			}
 			if(isset($_GET['w']) and $_GET['w']==1){
-				$head['w']=1;
-				$head['a']=0;
+				$head['w']=0;
+				$head['a']=1;
 			}
+			$head['zona'] = $this->programacionModel->getProgramacionesZona($id);
 			$head['dashboard']=$this->sistemaModel->getDashboard('members', $id);
 			$this->load->view('sistema/index2', $head);
 			/* index para no administradores*/
@@ -45,6 +134,7 @@ class Sistema extends CI_Controller
 		/* RECOLECTORES */
 		if($this->ion_auth->in_group('recolectores')){
 			if(isset($_SESSION['message'])){$head['message'] = $_SESSION['message'];}
+			$head['w']=0;$head['a']=0;
 			$head['dashboard']=$this->sistemaModel->getDashboard('recolector', $id);
 			$this->load->view('sistema/index2', $head);
 			/* index para no administradores*/

@@ -48,7 +48,7 @@
           </div>
         </div>
 				<div class="col-xs-8">
-					<a href="#" class="pull-right" style="color:rgb(26,37,115);">Olvide mi clave</a><br>
+					<a href="#" class="pull-right" style="color:rgb(26,37,115);">Olvidé mi clave</a><br>
 					<a href="<?php echo site_url('inicio/registro');?>" class="pull-right" style="color:rgb(26,37,115);">Registrarse</a>
         </div>
         <!-- /.col -->

@@ -95,12 +95,16 @@ class Usuarios extends CI_Controller
 	public function perfilUsuario(){
 		$this->load->model('rutasModel');
 		$this->load->model('programacionModel');
-		
 		$id = $this->session->userdata('user_id');
 		/*HEAD*/
 		$headData = array('titulo_pagina' => 'Perfil - Amazoniko','titulo_perfil'=>'Perfil de Usuario');
 		/*HEADER*/
 		$headerData = array('op_perfilu'=> 'active');
+		if(!$this->rutasModel->chequearParaderoExisteUsuario($id)){
+				$headerData['valid']=0;
+			}else{
+				$headerData['valid']=1;
+		}
 		/* CONTENIDO ESTATICO */
 		$head = array('head'=>$this->load->view('sistema/static/head',$headData,true),
 					  'header'=>$this->load->view('sistema/static/header',$headerData,true));
@@ -110,8 +114,70 @@ class Usuarios extends CI_Controller
 		$paradero = $this->usuariosModel->getParaderoUsuario($id);
 		$head['paradero']= $this->programacionModel->getParaderoUsuario($id);
 		$head['map'] = $paradero['map'];
-		$this->load->view('sistema/usuarios/perfilUsuarios', $head);
+		if(!$this->rutasModel->chequearParaderoExisteUsuario($id)){
+				$this->load->view('sistema/usuarios/perfilUsuariosN', $head);
+			}else{
+				$this->load->view('sistema/usuarios/perfilUsuarios', $head);
+		}
+		
     }
+	
+	public function ajax_actualizarDatos(){
+		$this->load->model('rutasModel');
+		$usuario = $_POST['userid'];
+		$datosUsuario = array(
+			'first_name'=>$_POST['nombre'],
+			'last_name'=>$_POST['apellido'],
+			'phone'=>$_POST['celular'],
+			'rut'=>$_POST['ndoc'],
+			'address'=>$_POST['direccion_paradero'],
+			'address_detail'=>$_POST['informacion_adicional'],
+			'habitantes'=>$_POST['no_habitantes'],
+			'tipo_vivienda'=>$_POST['tipo_vivienda']
+			);
+		$datosParadero = array(
+			'direccion'=>$_POST['direccion_paradero'],
+			'lat'=>$_POST['lat'],
+			'lon'=>$_POST['lng'],
+			'activo'=>0,
+			'ordenamiento'=>0,
+			'nombre'=>$_POST['nombre_paradero'],
+			'usuario_id'=>$usuario,
+			'estado'=>1 );
+		$validarExParadero = $this->rutasModel->checkParaderoUsuario($usuario);
+		/* si no existe, que deberia ser asi, insertar paradero y hacer update en usuarios.*/
+		$result = array();
+		if(!$validarExParadero){
+			if($this->rutasModel->guardarParaderoAjax($datosParadero)){
+				$result['paradero']=1;
+			}else{
+				$result['paradero']=0;
+			}
+			if($this->rutasModel->actualizarDatosUsuario($usuario,$datosUsuario)){
+				$result['usuario']=1;
+			}else{
+				$result['usuario']=0;
+			}
+			$result['code']=100;
+			$result['userid']=$usuario;
+			echo json_encode($result);
+		}else{
+			if($this->rutasModel->actualizarParaderoAjax($usuario, $datosParadero)){
+				$result['paradero']=1;
+			}else{
+				$result['paradero']=0;
+			}
+			if($this->rutasModel->actualizarDatosUsuario($usuario,$datosUsuario)){
+				$result['usuario']=1;
+			}else{
+				$result['usuario']=0;
+			}
+			$result['code']=100;
+			$result['userid']=$usuario;
+			echo json_encode($result);
+		}
+		/*echo json_encode(array('code'=>100, 'userid'=>$usuario));*/
+	}
 	
     public function eUsuario(){
         $id=filter_input(INPUT_POST, 'userid');
@@ -227,9 +293,31 @@ class Usuarios extends CI_Controller
 					);
 		if(isset($_SESSION['message'])){$head['message'] = $_SESSION['message'];}
 		$head['usuario']=$this->usuariosModel->getUsuariosSistema($id);
-		$head['rutasOp']=$this->usuariosModel->getRutasOptions($id);
+		$head['rutasOp']=$this->usuariosModel->getZonasOptions($id);
 		$this->load->view('sistema/usuarios/editarRutaUsuarios', $head);
 	}
+	public function guardarUsuarioZona(){
+		$this->usuariosModel->delUsuarioZonas($_POST['userid']);
+		foreach($_POST['rutasUsuario'] as $k => $v){
+			$this->usuariosModel->asignarZonas($_POST['userid'], $v);
+		}
+		$this->session->set_flashdata('message', 'Zonas actualizadas');
+		redirect('usuarios/rutas');
+	}
+	/*	public function editarRutaUsuarios($id){
+		
+		$headData = array('titulo_pagina' => 'Usuario Rutas - Amazoniko');
+		
+		$headerData = array('rutas_main'=> 'active');
+	
+		$head = array('head'=>$this->load->view('sistema/static/head',$headData,true),
+					  'header'=>$this->load->view('sistema/static/header',$headerData,true)
+					);
+		if(isset($_SESSION['message'])){$head['message'] = $_SESSION['message'];}
+		$head['usuario']=$this->usuariosModel->getUsuariosSistema($id);
+		$head['rutasOp']=$this->usuariosModel->getZonasOptions($id);
+		$this->load->view('sistema/usuarios/editarRutaUsuarios', $head);
+	}*/
 	
 	public function guardarUsuarioRutas(){
 		$this->usuariosModel->delUsuarioRutas($_POST['userid']);
@@ -239,5 +327,6 @@ class Usuarios extends CI_Controller
 		$this->session->set_flashdata('message', 'Rutas actualizadas');
 		redirect('usuarios/rutas');
 	}
+	
 	
 }

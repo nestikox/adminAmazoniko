@@ -25,7 +25,7 @@
             <div class="box-header"> <h4> Datos de Recoleccion </h4></div>
             <div class="box-body">
                 <table class="table" id="historial">
-                  <thead><tr><th>Bolsas A</th><th>Bolsas B</th><th>Peso A</th><th>Peso B</th><th>Calificación</th><th>Puntos</th><th>Fecha</th></tr></thead>
+                  <thead><tr><th>Bolsas A</th><th>Bolsas B</th><th>Peso A</th><th>Peso B</th><th>Calificación</th><th>Puntos</th><th>Fecha</th><th>Comentario</th></tr></thead>
                   <tbody></tbody>
                 </table>
             </div>

@@ -39,8 +39,8 @@
                         <tr>
                             <th>Id</th>
                             <th>Nombre</th>
-                            <th>Descripción</th>
                             <th>Delimitación</th>
+                            <th>Dirección</th>
 														<th>Color</th>
                             <th>Opciones</th>
                         </tr>
@@ -49,6 +49,15 @@
                   
                 </tbody>
                 </table>
+          </div>
+          <!-- /.box-body -->
+        </div>
+        <div class="box box-default">
+          <div class="box-header with-border">
+            <h3 class="box-title"><b> Mapa de Zonas</b></h3>
+          </div>
+          <div class="box-body">
+            <div id="map" style="width:100%; min-height:400px;"></div>
           </div>
           <!-- /.box-body -->
         </div>
@@ -75,31 +84,10 @@
 </script>
 <!-- Bootstrap 3.3.7 -->
 <script src="<?php echo base_url('resources/');?>bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-<!-- Morris.js charts -->
-<script src="<?php echo base_url('resources/');?>bower_components/raphael/raphael.min.js"></script>
-<script src="<?php echo base_url('resources/');?>bower_components/morris.js/morris.min.js"></script>
-<!-- Sparkline -->
-<script src="<?php echo base_url('resources/');?>bower_components/jquery-sparkline/dist/jquery.sparkline.min.js"></script>
-<!-- jvectormap -->
-<script src="<?php echo base_url('resources/');?>plugins/jvectormap/jquery-jvectormap-1.2.2.min.js"></script>
-<script src="<?php echo base_url('resources/');?>plugins/jvectormap/jquery-jvectormap-world-mill-en.js"></script>
-<!-- jQuery Knob Chart -->
-<script src="<?php echo base_url('resources/');?>bower_components/jquery-knob/dist/jquery.knob.min.js"></script>
-<!-- daterangepicker -->
-<script src="<?php echo base_url('resources/');?>bower_components/moment/min/moment.min.js"></script>
-<script src="<?php echo base_url('resources/');?>bower_components/bootstrap-daterangepicker/daterangepicker.js"></script>
-<!-- datepicker -->
-<script src="<?php echo base_url('resources/');?>bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"></script>
-<!-- Bootstrap WYSIHTML5 -->
-<script src="<?php echo base_url('resources/');?>plugins/bootstrap-wysihtml5/bootstrap3-wysihtml5.all.min.js"></script>
-<!-- Slimscroll -->
-<script src="<?php echo base_url('resources/');?>bower_components/jquery-slimscroll/jquery.slimscroll.min.js"></script>
-<!-- FastClick -->
-<script src="<?php echo base_url('resources/');?>bower_components/fastclick/lib/fastclick.js"></script>
+
 <!-- AdminLTE App -->
 <script src="<?php echo base_url('resources/');?>dist/js/adminlte.min.js"></script>
-<!-- AdminLTE dashboard demo (This is only for demo purposes) -->
-<script src="<?php echo base_url('resources/');?>dist/js/pages/dashboard.js"></script>
+
 <!-- AdminLTE for demo purposes -->
 <script src="<?php echo base_url('resources/');?>dist/js/demo.js"></script>
 <script src="<?= base_url('resources/plugins/datatables/jquery.dataTables.min.js') ?>"></script>
@@ -117,5 +105,84 @@
                 });
             });
     </script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBU1DFhBkdGMc4OfpW90wIEQmlVnWZ6mCo&libraries=drawing&callback=initMap"></script>
+
+ <script type="text/javascript">
+  var map, zonas=[];
+function initMap() {
+  // Map Center
+  var myLatLng = new google.maps.LatLng(4.695163, -74.057524);
+  // General Options
+  var mapOptions = {
+    zoom: 12,
+    center: myLatLng,
+    mapTypeId: google.maps.MapTypeId.RoadMap
+  };
+  
+    map = new google.maps.Map(document.getElementById('map'),mapOptions);
+   $.ajax({
+      type: "POST",
+      url: "<?=site_url('ajax_request/getZonasCoords')?>",
+      data: {},
+      success: function(data){
+       r = JSON.parse(data);
+       i=0;
+       $.each(r, function(){
+        var color, coords,zonanombre;
+        color = this.color;
+        zonanombre = this.nombre;
+        $.ajax({
+            type: "POST",
+            url: "<?=site_url('ajax_request/getZonaCoordinates/')?>"+this.id,
+            data: {zoid:this.id},
+            success: function(cozo){
+            coords = JSON.parse(cozo);
+            new google.maps.Polygon({
+              map: map,
+              paths: coords,
+              strokeColor: "#878787",
+              strokeOpacity: 0.8,
+              strokeWeight: 2,
+              fillColor: color,
+              fillOpacity: 0.35,
+              content: zonanombre
+          });
+          }
+          });
+          //zonas[r.id]
+          i++;
+        });
+      }
+    });
+    /* Definir las coordenadas del polygono
+          var zona1 = */
+}
+
+//Display Coordinates below map
+function getPolygonCoords() {
+  var len = myPolygon.getPath().getLength();
+  var htmlStr = ""; htmlData = "";coordenadasPoly = [];
+                     var dataHolder = document.querySelector('#coordenadas');
+                     var dataP = document.querySelector("#coordenadas_data");
+                     dataP.innerHTML = '';
+                     htmlStr += "[";
+ for (var i = 0; i < len; i++) {
+                        htmlData+= "<input name='coordenadaspoligono["+i+"]' type='hidden' value=\""+myPolygon.getPath().getAt(i).toUrlValue(6);
+                        htmlData+= "\"/>";
+                        if(i>0){htmlStr +=",";}
+                        htmlStr += "{";
+                        htmlStr += myPolygon.getPath().getAt(i).toUrlValue(6);
+                        htmlStr += "}";
+                      
+                     }
+                     htmlStr += "]";
+                     dataHolder.innerHTML = htmlStr;
+                     dataP.innerHTML = htmlData;																					
+}
+function copyToClipboard(text) {
+  window.prompt("Copy to clipboard: Ctrl+C, Enter", text);
+}
+            
+        </script>
 </body>
 </html>

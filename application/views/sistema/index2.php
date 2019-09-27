@@ -12,12 +12,11 @@
 	.w3-left, .w3-right, .w3-badge {cursor:pointer}
 	.w3-badge {height:13px;width:13px;padding:0}
 </style>
-	
-</style>
 <div class="wrapper">
   <?php echo $header;?>
   <!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
+		<?php $group = 'members'; if($this->ion_auth->in_group($group)): ?>
 	<div class="w3-content w3-display-container" style="max-width:1800px">
 	  <img class="mySlides" src="images/slide1.jpg" style="width:100%">
 	  <img class="mySlides" src="images/slide2.jpg" style="width:100%">
@@ -30,23 +29,13 @@
 		<span class="w3-badge demo w3-border w3-transparent w3-hover-white" onclick="currentDiv(3)"></span>
 	  </div>
 	</div>
+	<?php endif; ?>
+	
    <!-- Content Header (Page header) -->
-						 <section class="content-header">
-					<h1>Dashboard
-						<small>Tablero Principal</small>
-					</h1>
-					<ol class="breadcrumb">
-						<li><a href="#"><i class="fa fa-dashboard"></i> Inicio</a></li>
-						<li class="active">Tablero Principal</li>
-					</ol>
-				</section>
-    <!-- Main content -->
-    <style>
-      .calendarHolder{padding: 30px;}
-      #calendar2, #calendar{border: 1px solid #25502559;}
-    </style>
+    <style>.calendarHolder{padding: 30px;}#calendar2, #calendar{border: 1px solid #25502559;}</style>
     <section class="content">
       <div class="row">
+				
         <div class="col-lg-3 col-xs-6">
           <div class="small-box bg-aqua-gradient">
             <div class="inner">
@@ -58,9 +47,7 @@
             </div>
           </div>
         </div>
-        <!-- ./col -->
         <div class="col-lg-3 col-xs-6">
-          <!-- small box -->
           <div class="small-box bg-green-gradient">
             <div class="inner">
               <h3><?php echo (isset($dashboard->plastico)?$dashboard->plastico:'0');?><sup style="font-size: 20px"></sup></h3>
@@ -71,8 +58,8 @@
             </div>
           </div>
         </div>
-		<div class="col-lg-3 col-xs-6">
-          <!-- small box -->
+		<?php $group = 'members'; if($this->ion_auth->in_group($group)): ?>
+				<div class="col-lg-3 col-xs-6">
           <div class="small-box bg-yellow-gradient">
             <div class="inner">
               <h3><?php echo (isset($dashboard->puntos)?$dashboard->puntos:'0');?><sup style="font-size: 20px"></sup></h3>
@@ -81,13 +68,13 @@
             <div class="icon">
               <i class="ion ion-star"></i>
             </div>
-            
           </div>
         </div>
+		<?php endif; ?>
 		<?php if($this->ion_auth->in_group('members')):?>
 		<div class="col-lg-3 col-xs-6">
           <!-- small box -->
-          <a href="<?php echo site_url('programaciones')?>"><div class="small-box bg-blue-gradient">
+          <a href="<?php echo (isset($valid) and $valid==0)?'#':site_url('programaciones');?>"><div class="small-box bg-blue-gradient">
             <div class="inner">
               <h3><sup style="font-size: 20px">&nbsp;</sup></h3>
               <p>Programar recolección</p>
@@ -111,13 +98,23 @@
             </div>
           </div></a>
         </div>
-		<?php endif;?>
-        <!-- ./col -->
-        
-        <!-- ./col -->
-        
-        <!-- ./col -->
-      </div>
+				<?php endif;?>
+<?php $group = 'recolectores'; if($this->ion_auth->in_group($group)): ?>
+						 <section class="col-lg-12 connectedSortable">
+						<!-- Chat box -->
+							 <div class="box box-success">
+								 <div class="box-header">
+									 <i class="fa fa-calendar"></i>
+									 <h3 class="box-title">Calendario de recolecciones.</h3>
+								 </div>
+								 <div class="box-body chat" id="chat-box">
+										<div id='calendar2'></div>
+									</div>
+								 <div class="box-footer"></div>
+							 </div>
+						</section>
+				 <?php endif; ?>
+			<?php if($this->ion_auth->in_group('members')):?>
       <div class="row">
         <div class="col-md-12">
           <div class="box">
@@ -190,6 +187,7 @@
         </div>
         <!-- /.col -->
       </div>
+				<?php endif;?>
       <!-- /.row (main row) -->
     </section>
 					<!-- /.content -->
@@ -207,11 +205,12 @@
 <!-- Modal -->
 <?php if(isset($w) and $w==1):?>
 	<div class="modal fade" id="infoModal" role="dialog">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-md">
       <!-- Modal content-->
       <div class="modal-content">
         <div class="modal-body">
-					<img id="tut1" src="<?php echo base_url('images/tutorial1.png');?>" style="width:100%">
+					<?php $diaZ = ((isset($zona->dia) and strlen($zona->dia)>1)?$zona->dia:'');?>
+					<img id="tut1" src="<?php echo base_url('images/tut'.strtolower($diaZ).'.jpg');?>" style="width:100%;">
 					<img id="tut2" style="display:none;width:100%;" src="<?php echo base_url('images/tutorial2.png');?>">
         </div>
       </div>
@@ -301,14 +300,11 @@
 		url: "<?=site_url('ajax_request/getProgramacionesUsuario')?>",
 		beforeSend: function(){	$("#cargador_holder").fadeIn();},
 		data: { usuario:<?=$this->session->userdata('user_id')?> }
-		})
-		.done(function( msg ) {
-			console.log(msg);
+		}).done(function( msg ){
 			$("#cargador_holder").fadeOut("slow");
 			msg = msg.substring(0, msg.length - 1);
 			msg = "["+msg+"]";
 			array = JSON.parse(msg);
-			
 			
 			var today = new Date();
 			var dd = String(today.getDate()).padStart(2, '0');

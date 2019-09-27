@@ -18,6 +18,7 @@
 		<section class="content">
       <style>
         #map {height: 250px;  /* The height is 400 pixels */width: 90%;margin: 0px auto;/* The width is the width of the web page */}
+        .small{ font-size: 10px!important;}
       </style>
       <div class="row">
         <!-- left column -->
@@ -25,7 +26,7 @@
           <!-- general form elements -->
             <div class="box box-primary">
             <div class="box-header">
-                <h4>Proximas Fechas de Recolecci&oacute;n</h4>
+                <h5>Detalles de Zona </h5>
               </div>
             <style>
               .sprite{ z-index: 10;margin-left: 5%;background: url('<?php echo base_url('images/buttonsOnOff2.png')?>') no-repeat;float: left;cursor: pointer;}
@@ -34,14 +35,19 @@
               .off{width: 80px;height: 50px;display: inline-block; /* Display icon as inline block */background-position: 0 -68px;}
             </style>
               <div class="box-body">
-              <div class="col-md-12">
                 <div class="row">
-                    <div class="col-md-6 form-group">
-                        <label>Recoleccion</label><br>
-                        <select class="form-control" name="fechaProxima" id="fechaProxima" required>
+                <div class="col-md-12">
+                  <div class="col-md-6 form-group" > Tu zona es: <label style="color:<?php echo $programacion->color;?>!important;"><?php echo $programacion->nombre;?></label></div>
+                  <div class="col-md-6 form-group"> Dias de recolección: <label><?php echo $programacion->dia;?></label></div>
+                  <div class="col-md-6 form-group">
+                        <label>Fechas de Recoleccion</label><br>
+                        <select class="form-control" name="fechaProxima" id="fechaProxima" <?php if($fecha['r2']>0){echo 'title="Ya ha programado una fecha de recolección"';}?> required <?php if($fecha['r2']>0){echo 'disabled';}?>>
                             <option value=""> Seleccione </option>
                             <?php foreach($fecha['proximas'] as $k=>$v):?>
-                              <option value="<?php echo $v->id;?>"><?php echo $v->ruta.'-'.$v->nuevafecha;?> </option>
+                              <!-- si existe recoleccion sobre la fecha finalizadas no mostrar -->
+                              <?php if($v->recoleccionEstado!=4 and $v->recoleccionEstado!=5 and $v->recoleccionEstado!=3):?>
+                                <option value="<?php echo $v->id;?>"><?php echo $v->nuevafecha;?> </option>
+                              <?php endif;?>
                             <?php endforeach;?>
                         </select>
                     </div>
@@ -61,11 +67,26 @@
                           <tbody>
                             <?php foreach($fecha['programadas'] as $k=>$v):?>
                               <tr>
-                                <td><?php echo $v->nuevafecha;?></td>
-                                <td><?php echo $v->ruta;?></td>
+                                <td>Próxima fecha de recolección: <b><?php echo $v->nuevafecha;?></b></td>
                                 <td>
-                                  <a href="#" onclick="confirmarBorrado('<?php echo site_url('programaciones/borrarFechaUsuario?pf='.$v->id.'&u='.$v->usuario_id);?>')" ><i class="fa fa-trash"></i></a>
+                                  <a href="#" onclick="confirmarBorrado('<?php echo site_url('programaciones/borrarFechaUsuario?pf='.$v->id.'&u='.$v->usuario_id);?>')" ><i class="fa fa-trash"></i> Cancelar Recolección</a>
                                 </td>
+                              </tr>
+                            <?php endforeach;?>
+                          </tbody>
+                        </table>
+                    </div>
+                    <?php endif;?>
+                     <?php if($fecha['r3']>0):?>
+                     <div class="col-md-12 form-group">
+                        <label>Ultimas recolecciónes:</label><br>
+                        <table class="table">
+                          <thead><tr><th class="small">Recolección:</th><th class="small">Estado:</th></tr></thead>
+                          <tbody>
+                            <?php foreach($fecha['pasadas'] as $k3=>$v3):?>
+                              <tr>
+                                <td>Fecha de recolección: <b><?php echo $v3->nuevafecha;?></b> </td>
+                                <td><b>Finalizada</b></td>
                               </tr>
                             <?php endforeach;?>
                           </tbody>
@@ -391,7 +412,7 @@ $(document).ready(function(){
     e.preventDefault();
     var programacionFc = $("#fechaProxima").val();
     var usuario = <?=$usuario?>;
-     if(programacionFc.length<2){
+     if(programacionFc.length<1){
       alert('Debe seleccionar una fecha para agendar la programacion.');
       return;
      }

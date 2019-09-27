@@ -36,6 +36,7 @@ class Programaciones extends CI_Controller
 			$head['map'] = $paradero['map'];
 			$head['fecha'] = $this->programacionModel->getProximasFechas($id);
 			$head['usuario'] = $this->session->userdata('user_id');
+			$head['programacion'] = $this->programacionModel->getProgramacionesZona($id);
 			$head['paraderoExiste'] = $this->programacionModel->comprobarParadero($id);
 			$this->load->view('sistema/programaciones/detallarProgramacionUsuario', $head);/* index para no administradores*/
 		}
@@ -65,6 +66,7 @@ class Programaciones extends CI_Controller
 		/* Si es administrador listar las programaciones */
 		$this->load->view('sistema/recolectores/recolecciones', $head);
 	}
+	
 	public function recolectar($idR=0){
 		if($idR>0){
 			$idUser = $this->session->userdata('user_id');
@@ -126,6 +128,7 @@ class Programaciones extends CI_Controller
 	
 	public function borrarFechaUsuario(){
 		$this->programacionModel->borrarFechaUsuario($_GET['pf'], $_GET['u']);
+		$this->programacionModel->borrarUsuarioRecoleccion($_GET['pf'], $_GET['u']);
 		$this->session->set_flashdata('message', 'La programacion ha sido actualizada.');
 		redirect('programaciones');
 	}

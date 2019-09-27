@@ -24,7 +24,6 @@ class Rutas extends CI_Controller
 		$head = array('head'=>$this->load->view('sistema/static/head',$headData,true),
 					  'header'=>$this->load->view('sistema/static/header',$headerData,true));
 		if(isset($_SESSION['message'])){$head['message'] = $_SESSION['message'];}
-		
 		$this->load->view('sistema/rutas/listarRutas', $head);
     }
     public function editarZona($id){
@@ -39,6 +38,7 @@ class Rutas extends CI_Controller
 		$head['poligonZona'] = $this->rutasModel->getPoligonZona($id);
 		$head['zona'] = $this->rutasModel->getZonas($id);
 		$head['recoleccion'] = $this->rutasModel->getRecoleccionZona($id);
+		$head['rd'] =$this->rutasModel->getProgramacionZona($id);
 		$this->load->view('sistema/rutas/editarZona', $head);
 	}
 
@@ -54,6 +54,57 @@ class Rutas extends CI_Controller
 		
 		$this->load->view('sistema/rutas/listarZonas', $head);
     }
+	public function validateZona($lat_a='', $lng_a='', $type=1){
+		$zonaPunto = array();/* Arreglo para resultados */
+		$this->load->model('rutasModel');
+		$this->load->library('pointLocation');
+		$lat=''; $lng='';
+		/* detectar los datos de lat y lng */
+		if(isset($_POST['lat']) and strlen($_POST['lat'])>2){$lat = $_POST['lat'];}
+		elseif(isset($_GET['lat']) and strlen($_GET['lat'])>2){$lat = $_GET['lat'];}
+		if(isset($_POST['lng']) and strlen($_POST['lng'])>2){$lng = $_POST['lng'];}
+		elseif(isset($_GET['lng']) and strlen($_GET['lng'])>2){$lng = $_GET['lng'];}
+		if(strlen($lat_a)>2){$lat = $lat_a;}
+		if(strlen($lng_a)>2){$lng = $lng_a;}
+		/* si no existen los datos para procesar devolver error */
+		if(strlen($lat)<2 and strlen($lng)<2){
+			$zonaPunto['c']=0;
+			$zonaPunto['m']="No se han enviado datos para procesar.";
+			if($type==1){
+				echo json_encode($zonaPunto);
+				return;
+			}else{
+				return $zonaPunto;
+			}
+		}
+		/* DETECTOR DE PUNTOS EN POLIGONO */
+		$pl = new pointLocation();
+		/* PUNTO QUE SE VA A CONSULTAR */
+		$punto =$lat." ".$lng;
+		/* ARREGLO DE ZONAS EN LAS QUE SE CONSULTARA EL PUNTO */
+		$zon = $this->rutasModel->getZonas();
+		/* Verificar por cada zona */
+		foreach($zon as $k1 => $v1):
+			$polygon = $this->rutasModel->getCoordZonaSep($v1->id);
+			$in = $pl->pointInPolygon($punto, $polygon);
+			if($in==true){
+				$zonaPunto['c']=1;
+				$zonaPunto['zona']=$v1->id;
+				$zonaPunto['zonaNombre']=$v1->nombre;
+				$zonaPunto['m']=$v1->nombre." cubre el punto de recoleccion.";
+				break;
+			}else{
+				$zonaPunto['c']=0;
+				$zonaPunto['m']="No se ha encontrado las coordenadas | ".$punto;
+			}
+		endforeach;
+		if($type==1){
+			echo json_encode($zonaPunto);
+			return;
+		}else{
+			return $zonaPunto;
+		}
+	}
     public function vcRuta(){
      	/*HEAD*/
 		$headData = array('titulo_pagina' => 'Crear Ruta - Amazóniko');
@@ -181,7 +232,20 @@ class Rutas extends CI_Controller
 			redirect('rutas/zonasAdm');
 		}
 	}
-	
+	public function actualizarFechasDeRecoleccion(){
+		$programacion_id = $_POST['programacion_id'];
+		/*calcular proximo dia y guardar recoleccion proxima*/
+		$proximaFecha = $this->rutasModel->getNuevaFecha($_POST['fecha_inicial']);
+		/* BORRAR PROGRAMACIONES y volver a insertar */
+		$this->rutasModel->resetProgramaciones($programacion_id);
+		/* proxima recoleccion despues de la fecha inicial */
+		$inicial = array('programacion_id'=>$programacion_id, 'nuevafecha'=>$proximaFecha->fecha1,'estado'=>1);
+		$dataProximaRecoleccion = array('programacion_id'=>$programacion_id, 'nuevafecha'=>$proximaFecha->next,'estado'=>1);
+		$dataProximaRecoleccion2 = array('programacion_id'=>$programacion_id, 'nuevafecha'=>$proximaFecha->next2,'estado'=>1);
+		$this->rutasModel->guardarFechasProgramacion($inicial);
+		$this->rutasModel->guardarFechasProgramacion($dataProximaRecoleccion);
+		$this->rutasModel->guardarFechasProgramacion($dataProximaRecoleccion2);
+	}
 	public function actualizarRuta(){
 		/* si programacion_id es mayor que 0 quiere decir que
 		   existe una programacion por tanto es una actualizacion,
@@ -292,15 +356,22 @@ class Rutas extends CI_Controller
 	}
 	public function ajax_guardarParadero_usuario(){
 		$usuario = $this->session->userdata('user_id');
-		$idRuta = $this->rutasModel->getRutaUsuario($usuario);
+		/*$idRuta = $this->rutasModel->getRutaUsuario($usuario);*/
 		/* si no existe el paradero crearlo */
+		$zonaAsignacion="";
+		$zona = $this->validateZona(filter_input(INPUT_POST,'lat'),filter_input(INPUT_POST,'lon'),2);
+			if($zona['c']==1){
+				$zonaAsignacion = $zona['zona'];
+			}else{
+				$zonaAsignacion = 0;
+			}
 		if(!$this->rutasModel->chequearParaderoExisteUsuario($usuario))
 		{
 			$paraderoInicial = array('nombre'=>filter_input(INPUT_POST,'nombre_paradero'),
 								 'lat'=>filter_input(INPUT_POST,'lat'),
 								 'lon'=>filter_input(INPUT_POST,'lon'),
 								 'direccion'=>filter_input(INPUT_POST,'direccion_paradero'),
-								 'id_ruta'=>$idRuta,
+								 'zona'=>$zonaAsignacion,
 								 'usuario_id'=>$usuario,
 								 'activo'=>TRUE);
 			$transaccion = $this->rutasModel->guardarParaderoAjax($paraderoInicial);
@@ -316,7 +387,7 @@ class Rutas extends CI_Controller
 			'lat'=>filter_input(INPUT_POST,'lat'),
 			'lon'=>filter_input(INPUT_POST,'lon'),
 			'direccion'=>filter_input(INPUT_POST,'direccion_paradero'),
-			'id_ruta'=>$idRuta,
+			'zona'=>$zonaAsignacion,
 			'activo'=>TRUE);
 			$this->rutasModel->actualizarParaderoAjax($usuario, $paraderoInicial);
 			$resultado['result'] = 0;$resultado['codigo'] = 1;

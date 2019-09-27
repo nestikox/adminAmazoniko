@@ -36,7 +36,7 @@
 						<section class="content">
 										<div class="box box-default">
 												<div class="box-header with-border">
-														<h3 class="box-title"><b>Recolectores - Zonas</b></h3>
+														<h3 class="box-title"><b>Usuario - Rutas</b></h3>
 												</div>
 												<div class="box-body">
 														<div class="col-md-12" style="margin:3px 0px 10px 0px">
@@ -57,7 +57,7 @@
 																														<th>Id</th>
 																														<th>Nombre de Usuario</th>
                                                             <th>Correo</th>
-																														<th>Zonas Asociadas</th>
+																														<th>Rutas Asociadas</th>
 																														<th>Option</th>
 																										</tr>
 																						</thead>
@@ -130,7 +130,7 @@
                 "processing": true,
                 "serverSide": true,
                 "ordering": false,
-                "ajax": "<?=site_url('ajax_request/pag_zonas_usuarios')?>",
+                "ajax": "<?=site_url('ajax_request/pag_rutas_usuarios')?>",
                 "language": es
                 });
             });

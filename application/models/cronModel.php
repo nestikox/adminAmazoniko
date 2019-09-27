@@ -25,8 +25,8 @@ class CronModel extends CI_Model
         $today = date('Y-m-d');
         $q1 ="select pf.* from a007_programaciones_fecha pf
                 inner join a006_programaciones p on pf.programacion_id = p.id
-                inner join a001_ruta r on p.ruta = r.ida001_ruta
-                where pf.nuevafecha <= '".$today."' and pf.estado in(1,3) and r.activo = 1;";
+                left join a003_zonas z on p.zona = z.id
+                where pf.nuevafecha <= current_date() and pf.estado in(1,3) and z.activo = 1;";
                 
         $qr1 = $this->db->query($q1);
             foreach($qr1->result() as $k1=>$v1){
@@ -37,7 +37,6 @@ class CronModel extends CI_Model
                     $this->cambiarEstadoFecha($v1->id, 4);
                     /* comprobar ultima fecha y crear nueva fecha a partir de la ultima */
                     $in = $this->generarNuevaFecha($v1->programacion_id);
-                    
                     echo $v1->nuevafecha." Dia vencido con Recoleccion. nueva fecha id -> ".$in."<br>";
                 }else{
                     /* NO existe recoleccion cerrar fecha en estado 2 = vencida */
@@ -47,8 +46,75 @@ class CronModel extends CI_Model
                     echo $v1->nuevafecha." Vencida sin recoleccion. nueva fecha id -> ".$in."<br>";
                 }
             }
+            $this->generarRecolecciones();
     }
     
+    public function generarFechasNuevaProgramacion($programacion){
+     
+       $q1 ="select pf.* from a007_programaciones_fecha pf
+                left join a006_programaciones p on pf.programacion_id = p.id
+                left join a003_zonas z on p.zona = z.id
+                where z.activo = 1 and programacion_id = $programacion";
+       $qr1 = $this->db->query($q1);
+      
+       $res = $qr1->row();
+       $this->generarNuevaFecha($res->programacion_id);
+       $this->generarRecolecciones();
+    }
+     public function cerrarDiaNOPRINT(){
+        /*
+        * Funcion: cerrarDia
+        * Objetivo: Realizar el chequeo diario para cerrar las fechas en curso
+        * y generar nueva fecha, tomando en cuenta si la fecha tiene recoleccion creada o no en caso
+        * de tener recoleccion el estado queda en 3 en caso contrario el estado queda en 2
+        */
+        /*vencer o finalizar las recolecciones pasadas de fecha*/
+        $this->finalizarRecoleccionesActuales();
+        $today = date('Y-m-d');
+        $q1 ="select pf.* from a007_programaciones_fecha pf
+                inner join a006_programaciones p on pf.programacion_id = p.id
+                left join a003_zonas z on p.zona = z.id
+                where pf.nuevafecha <= current_date() and pf.estado in(1,3) and z.activo = 1;";
+                
+        $qr1 = $this->db->query($q1);
+            foreach($qr1->result() as $k1=>$v1){
+            /* comprobar si tiene recoleccion activa */
+            $recoleccion=$this->comprobar_recoleccion_fecha($v1->id);
+                if($recoleccion){
+                    /* si existe recoleccion cerrar fecha en estado 3 = vencida fecha con recoleccion */
+                    $this->cambiarEstadoFecha($v1->id, 4);
+                    /* comprobar ultima fecha y crear nueva fecha a partir de la ultima */
+                    $in = $this->generarNuevaFecha($v1->programacion_id);
+                    //echo $v1->nuevafecha." Dia vencido con Recoleccion. nueva fecha id -> ".$in."<br>";
+                }else{
+                    /* NO existe recoleccion cerrar fecha en estado 2 = vencida */
+                    $this->cambiarEstadoFecha($v1->id, 2);
+                    /* crear nueva fecha */
+                    $in = $this->generarNuevaFecha($v1->programacion_id);
+                    //echo $v1->nuevafecha." Vencida sin recoleccion. nueva fecha id -> ".$in."<br>";
+                }
+            }
+            $this->generarRecolecciones();
+    }
+    public function generarRecolecciones(){
+      /* consultar fechas que no tienen recoleccion */
+      $q1="SELECT pf.* FROM amazoniko2.a007_programaciones_fecha pf
+          left join a009_recolecciones rec on rec.fecha_id = pf.id
+          where pf.nuevafecha >= current_date() and rec.id is null;";
+      $q1r = $this->db->query($q1);
+      $res1 = $q1r->result();
+      $res1n = $q1r->num_rows();
+      if($res1n > 0){
+       foreach($res1 as $k => $v){
+        /* crear recoleccion, estado =1 creada - en espera */
+         $data = array('fecha_id'=>$v->id, 'estado'=>1);
+         $this->generarRecoleccion($data);
+       }
+      }
+    }
+    public function generarRecoleccion($data){
+      return $this->db->insert('a009_recolecciones', $data);
+    }
     public function generarNuevaFecha($programacion_id){
         /* consulta la ultima fecha programada */
         $q = "select * from a007_programaciones_fecha where programacion_id=$programacion_id and estado=1 order by nuevafecha desc limit 1;";
@@ -124,6 +190,15 @@ left join usuarios r on r.id = a.id_recolector');
 		}
   echo $i." actualizaciones";*/
 	}
+ 
+ public function insertarZona($z){
+   if($this->db->insert('a004_zona_coordenadas', $z)){
+     return true;
+    }else{
+     return false;
+    }
+ }
+ 
  public function finalizarRecoleccionesActuales(){
   $q="SELECT r.id FROM a009_recolecciones r 
    left join a007_programaciones_fecha pf on pf.id = r.fecha_id 

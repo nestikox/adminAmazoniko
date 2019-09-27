@@ -1,5 +1,6 @@
 <?php echo $head;?>
 <body class="hold-transition skin-green sidebar-mini">
+ <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 <div class="wrapper">
   <?php echo $header;?>
   <!-- Content Wrapper. Contains page content -->
@@ -31,8 +32,7 @@
 						<?php //var_dump($poligonZona);?>
                         <label>Nombre</label>
                         <input type="text" class="form-control" placeholder="Nombre" id="nombre" name="nombre" value="<?php echo $zona->nombre;?>">
-																								<input type="hidden" name="idZona" value="<?php echo $zona->id;?>">
-																						 
+																								<input type="hidden" id="idZona" name="idZona" value="<?php echo $zona->id;?>">
 																						</div>
                       <div class="col-md-8 form-group">
                             <label>Dirección</label>
@@ -59,6 +59,31 @@
 																									<option value="0" <?php if($zona->activo ==0){echo "selected";}?>> Inactivo</option>
 																								</select>
                       </div>
+                      <div class="col-xs-3 form-group"><?php //var_dump($rd);?>
+                       <label>Fecha de inicial:</label>
+                        <input type="text" class="form-control" id="fecha_inicial" name="fecha_inicial" autocomplete="off" value="">
+                        <input type="hidden" name="programacion_id" value="<?php echo ((isset($rd['programacion']->id) and $rd['programacion']->id>0)?$rd['programacion']->id:0)?>">
+                      </div>
+                      <div class="col-xs-3 form-group">
+                        <label>Dias de Recolecci&oacute;n:</label>
+                        <input type="text" class="form-control" id="dia_recoleccion" name="dia_recoleccion" value="<?php echo ((isset($rd['programacion']->dia) and strlen($rd['programacion']->dia)>1)?$rd['programacion']->dia:'');?>" autocomplete="off" readonly="readonly">
+                      </div>
+                      <div class="col-xs-3 form-group">
+                        <button id="actualizarProg" class="btn btn-success">
+                         Actualizar fechas <br> de Recoleccion</button>
+                      </div>
+                       <?php if(isset($rd['fechas']) and is_array($rd['fechas'])):?>
+                        <div class="col-md-12 form-group">
+                         <label>Proximas Fechas</label>&nbsp;<i class="fa fa-clock-o" aria-hidden="true"></i><br>
+                         <table id="data" width="100%" class="table">
+                          <tbody>
+                           <?php foreach($rd['fechas'] as $k => $v):?>
+                            <tr><td><?php echo $v->nuevafecha;?></td></tr>
+                           <?php endforeach;?>
+                          </tbody>
+                         </table>
+                         </div>
+                        <?php endif;?>
                       <div class="col-md-12 form-group">
                         <label>Coordenadas (SISTEMA)</label>
                         <textarea autocomplete='OFF' class="form-control" id="coordenadas" name="coordenadas" placeholder="Descripcion de la Zona" readonly="true" required>
@@ -123,37 +148,65 @@
 </script>
 <!-- Bootstrap 3.3.7 -->
 <script src="<?php echo base_url('resources/');?>bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-<!-- Morris.js charts -->
-<script src="<?php echo base_url('resources/');?>bower_components/raphael/raphael.min.js"></script>
-<script src="<?php echo base_url('resources/');?>bower_components/morris.js/morris.min.js"></script>
-<!-- Sparkline -->
-<script src="<?php echo base_url('resources/');?>bower_components/jquery-sparkline/dist/jquery.sparkline.min.js"></script>
-<!-- jvectormap -->
-<script src="<?php echo base_url('resources/');?>plugins/jvectormap/jquery-jvectormap-1.2.2.min.js"></script>
-<script src="<?php echo base_url('resources/');?>plugins/jvectormap/jquery-jvectormap-world-mill-en.js"></script>
-<!-- jQuery Knob Chart -->
-<script src="<?php echo base_url('resources/');?>bower_components/jquery-knob/dist/jquery.knob.min.js"></script>
-<!-- daterangepicker -->
-<script src="<?php echo base_url('resources/');?>bower_components/moment/min/moment.min.js"></script>
-<script src="<?php echo base_url('resources/');?>bower_components/bootstrap-daterangepicker/daterangepicker.js"></script>
-<!-- datepicker -->
-<script src="<?php echo base_url('resources/');?>bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"></script>
-<!-- Bootstrap WYSIHTML5 -->
-<script src="<?php echo base_url('resources/');?>plugins/bootstrap-wysihtml5/bootstrap3-wysihtml5.all.min.js"></script>
-<!-- Slimscroll -->
-<script src="<?php echo base_url('resources/');?>bower_components/jquery-slimscroll/jquery.slimscroll.min.js"></script>
-<!-- FastClick -->
-<script src="<?php echo base_url('resources/');?>bower_components/fastclick/lib/fastclick.js"></script>
 <!-- AdminLTE App -->
 <script src="<?php echo base_url('resources/');?>dist/js/adminlte.min.js"></script>
-<!-- AdminLTE dashboard demo (This is only for demo purposes) 
-<script src="<?php echo base_url('resources/');?>dist/js/pages/dashboard.js"></script>-->
-<!-- AdminLTE for demo purposes 
-<script src="<?php echo base_url('resources/');?>dist/js/demo.js"></script>-->
+
 <script src="<?= base_url('resources/plugins/datatables/jquery.dataTables.min.js') ?>"></script>
 <script src="<?= base_url('resources/plugins/datatables/dataTables.bootstrap.min.js') ?>"></script>
 <script src="<?=base_url()?>resources/plugins/jquery/dist/jquery.min.js"></script>
+<!-- jQuery UI 1.11.4 -->
+<script src="<?php echo base_url('resources/');?>bower_components/jquery-ui/jquery-ui.min.js"></script>
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBU1DFhBkdGMc4OfpW90wIEQmlVnWZ6mCo&libraries=drawing&callback=initMap"></script>
+<script>
+  $(document).ready(function(){
+   $("#actualizarProg").on('click', function(e){
+    e.preventDefault();
+    var fecha_i = $("#fecha_inicial").val();
+    var diaR = $("#dia_recoleccion").val();
+    var act = $("input[name='actualizar_programacion']:checked").val();
+    var zona = $("#idZona").val();
+    if(fecha_i.length<2){ alert(' Debe proporcionar una fecha inicial para establecer los dias y fechas de recolección próximos, las fechas se actualizarán segun la selección.');return;}
+    if(diaR.length<2){ alert(' No ha seleccionado fecha.');return;}
+    c = confirm('Desea Actualizar los datos de recoleccion?');
+    if(c){
+     $.ajax({
+        type: "POST",
+            url: "<?=site_url('ajax_request/guardarProgramacionNueva/')?>"+this.id,
+            data: {fecha:fecha_i, dia:diaR, act:1, zona:zona},
+            success: function(data){
+             r = JSON.parse(data);
+             if(r.code>0){
+               window.location.reload();
+              }else{
+               console.log(r.code);
+              }
+            }
+      });
+    }
+    return;
+   });
+    var weekday=new Array(7);
+      weekday[0]="Domingo";
+      weekday[1]="Lunes";
+      weekday[2]="Martes";
+      weekday[3]="Miercoles";
+      weekday[4]="Jueves";
+      weekday[5]="Viernes";
+      weekday[6]="Sabado";
+    $("#fecha_inicial").datepicker({
+        dateFormat: 'yy-mm-dd',
+        maxDate:'+1m +10d',
+        minDate: 0,
+        onSelect: function(dateText, inst) {
+          var date = $(this).datepicker('getDate');
+          var dayOfWeek = weekday[date.getUTCDay()];
+          $("#dia_recoleccion").val(dayOfWeek);
+          $("#dia_recoleccion_num").val(date.getUTCDay());
+          // dayOfWeek is then a string containing the day of the week
+        }}
+        );
+      });
+  </script>
 <script>
 // Initialize and add the map
 		$(document).ready(function(){

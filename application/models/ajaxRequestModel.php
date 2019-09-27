@@ -48,4 +48,27 @@
          }
          return $resultado;
         }
+       public function getUsuarioZonasConcat($id){
+         $qr="select z.nombre from a005_usuario_zonas uz 
+           left join a003_zonas z on z.id = uz.zona
+           left join users u on u.id = uz.usuario where u.id=$id;";
+         $exec = $this->db->query($qr);
+         $r = $exec->result();
+         $numeroRegistros = $exec->num_rows();
+         $resultado = "";
+         $i = 0; /*contador*/
+         if($numeroRegistros>=2){
+          foreach($r as $k => $v){
+            if($i==0){
+              $resultado.=$v->nombre;
+             }else{
+              $resultado.=" , ".$v->nombre;
+             }  
+           $i++;
+          }
+         }elseif($numeroRegistros==1){
+            $resultado=$r[0]->nombre;
+         }
+         return $resultado;
+       }
 }

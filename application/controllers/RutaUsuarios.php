@@ -27,5 +27,9 @@ class RutaUsuarios extends CI_Controller
 		
 		$this->load->view('sistema/rutas/listarRutas', $head);
     }
+	public function misZonas(){
+		echo "mis zonas";
+	}
+	
 	
 }

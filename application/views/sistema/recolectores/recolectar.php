@@ -64,6 +64,7 @@
                 .rating2 {direction: rtl;}.rating2 a {float:none}
                 /**/
                 label{font-size:10px;}
+                textarea.form-control{padding: 4px 6px!important;min-height: 20px!important;font-size: 10px!important;font-weight: bolder!important;}
                 input.form-control{padding: 4px 6px!important;height: 20px!important;font-size: 12px!important;font-weight: bolder!important;}
                 select{padding: 0px 15px 0px 0px!important;height: 20px!important;font-size: 10px!important;font-weight: bolder!important;}
                 .mid{ margin: 25px 0px; }
@@ -78,7 +79,7 @@
               </style>
               <form id="recoleccion_data">
                 <div class="row">
-                    <div class="col-md-4" style="margin:3px 0px 10px 0px">
+                    <div class="col-md-3" style="margin:3px 0px 10px 0px">
                       <div class="col-md-6 form-group">
                         <input type="hidden" id="recolector" name="recolector" value="<?php echo $usuarioRecolector;?>">
                         <label>Bolsa-A <small>(Plasticos)</small></label>
@@ -87,22 +88,22 @@
                         <input type="number" id="bolsab" name="bolsab" value="0" class="form-control">
                       </div>
                       <div class="col-md-6 form-group">
-                        <label>Peso-A </label>
-                        <input type="number" id="pesoa" name="pesoa" step="0.1" min="0" max="100" value="0" class="form-control">
-                        <label>Peso-B </label>
-                        <input type="number" id="pesob" name="pesob" step="0.1" min="0" max="100" value="0" class="form-control">
+                        <label>Peso-A <small>gramos</small></label>
+                        <input type="number" id="pesoa" name="pesoa" step="1" min="0" max="100" value="0" class="form-control">
+                        <label>Peso-B <small>gramos</small> </label>
+                        <input type="number" id="pesob" name="pesob" step="1" min="0" max="100" value="0" class="form-control">
                       </div>
                     </div>
-                    <div class="col-md-8" style="margin:3px 0px 10px 0px">
-                      <div class="col-md-5 mid">
+                    <div class="col-md-9" style="margin:3px 0px 10px 0px">
+                      <div class="col-md-3 mid">
                         <label>Paradero</label>
                         <select id="paraderos" name="paradero" class="form-control">
                           <option value="">Seleccione...</option>
                         </select>
                       </div>
                       <div class="col-md-2 mid">
-                        <label>Puntos</label>
-                        <input type="number" id="puntos" name="puntos" value="0" class="form-control">
+                        <label>Comentarios</label>
+                        <textarea class="form-control" name="comentario" id="comentario"></textarea>
                       </div>
                        <div class="col-md-2 mid">
                         <label>Calificacion</label>
@@ -114,6 +115,11 @@
                         --><input name="stars" id="e1" class="star" value="1" type="radio"></a><label class="star" for="e1">☆</label>
                         </div>
                       </div>
+                      <div class="col-md-2 mid">
+                        <label>Puntos</label>
+                        <input type="number" id="puntos" name="puntos" value="0" class="form-control" readonly>
+                        <input type="hidden" id="puntos2" name="puntos2" value="0" class="form-control" readonly>
+                      </div>
                       <div class="col-md-3 mid">
                         <button id="recolectarParadero" class="btn btn-success"><i class="fa fa-plus-circle"></i> Procesar Recoleccion</button>
                         <button id="finalizarRecoleccion" style="display:none;" class="btn btn-warning"><i class="fa fa-check-square-o" style="color:green;"></i> Finalizar Recoleccion</button>
@@ -121,28 +127,45 @@
                     </div>
                 </div>
               </form>
-            
-            <div class="col-md-12" style="margin:3px 0px 10px 0px">
-            </div>
-                <table id="rutas" class="display hover responsive cell-border">
+            <div class="row">
+              <div class="col-lg-12">
+              <div class="col-lg-6">
+                <h4><b>Datos de Recolección</b></h4>
+                 <table id="rutas" class="display hover responsive cell-border">
                                 <thead>
                                     <tr>
-                                        <th>B-A</th>
-                                        <th>B-B</th>
-                                        <th>P-A</th>
-                                        <th>P-B</th>
-                                        <th>Calificacion</th>
+                                        <th>P<b>A</b></th>
+                                        <th>P<b>B</b></th>
+                                        <th>Cal</th>
                                         <th>Puntos</th>
-                                        <th>Ubicación - Paradero</th>
-                                        <th>Opciones</th>
+                                        <th><i class="fa fa-comment"></i></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                             
                                 </tbody>
                         </table>
-                    <?php ?>
-                </div>
+              </div>
+              <div class="col-lg-6" >
+                <h4><b>Datos de Usuarios</b></h4>
+                 <table id="clientes" class="display hover responsive cell-border">
+                                <thead>
+                                    <tr>
+                                        <th><i class="fa fa-user"></i></th>
+                                        <th>Dir</th>
+                                        <th><i class="fa fa-mobile-phone"></i></th>
+                                        <th><i class="fa fa-map-marker" aria-hidden="true"></i></th>
+                                        <th><i class="fa fa-square-o" ></i></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                            
+                                </tbody>
+                        </table>
+              </div>
+              </div>
+            </div>
+           </div>
             <!-- /.box-body -->
             </div>
         </section>
@@ -171,8 +194,16 @@
                 "ajax": "<?=site_url('ajax_request/pagRecoleccionLive/'.$idRecoleccion)?>",
                 "language": es
                 });
+            var data2 = $("#clientes").DataTable({
+                "processing": true,
+                "serverSide": true,
+                "ordering": false,
+                "ajax": "<?=site_url('ajax_request/pagParaderosLive/'.$idRecoleccion)?>",
+                "language": es
+                });
             cargarParaderos('<?php echo $idRecoleccion;?>');
-            setTimeout( function () { datat.ajax.reload( null, false ); },30000);
+            setInterval( function () { datat.ajax.reload( null, false ); },30000);
+            setInterval( function () { data2.ajax.reload( null, false ); },20000);
             var brecolectar = document.getElementById('recolectarParadero');
             var finRec = document.getElementById('finalizarRecoleccion');
             brecolectar.addEventListener('click', function(e){recolectar(e);});
@@ -197,13 +228,61 @@
                });
               }
             }
+            $("#pesoa").on('change',function(){var bolsaa;bolsaa = $("#bolsaa").val();if(bolsaa<1){ $("#bolsaa").val(1); }});
+            $("#pesob").on('change',function(){var bolsab;bolsab = $("#bolsab").val();if(bolsab<1){ $("#bolsab").val(1); }});
             
+            $("input[name='stars']").on('change',function(){calcularPuntos();});
+            $("input[name='stars']").on('click',function(){calcularPuntos();});
+            function calcularPuntos(){
+              var peso1, peso2, calificacion,puntos, bolsaa, bolsab;
+              peso1 =parseInt($("#pesoa").val());peso2 = parseInt($("#pesob").val());
+              bolsaa=parseInt($("#bolsaa").val());bolsab= parseInt($("#bolsab").val());
+              calificacion = parseInt($("input[name='stars']:checked").val());
+              if(peso1>0 || peso2>0){
+                 
+              switch(calificacion){
+                case 1:
+                 
+                   puntos = (peso1+peso2)*0.20;/*80%*/
+                   
+                  break;
+                case 2:
+                 
+                   puntos = (peso1+peso2)*0.40;/*80%*/
+                  
+                  break;
+                case 3:
+                
+                  puntos = (peso1+peso2)*0.60;/*80%*/
+                  
+                  break;
+                case 4:
+                  
+                  puntos = (peso1+peso2)*0.80;/*80%*/
+                 
+                  break;
+                case 5:
+                 
+                  puntos = peso1+peso2;
+                 
+                  break;
+                  default:
+                  break;
+                }
+                puntos = puntos.toFixed(0);
+                console.log( puntos, calificacion);
+                $("#puntos").val(puntos);   
+              }else{
+                if(peso1==0 || peso2==0){ alert('valor de la recoleccion esta en 0 puntaje=0');}
+              }
+            }
             function recolectar(e){
                   e.preventDefault();
-                  var b1,b2,p1,p2,cal,pun,rid,uid,bandera=0;
+                  var b1,b2,p1,p2,cal,pun,rid,uid,bandera=0,comentario;
                   /* asignar valores a cada variable */
                   b1 = $("#bolsaa").val();b2 = $("#bolsab").val();cal = $("#calificacion").val();rid = $("#recolector").val();
                   p1 = $("#pesoa").val();p2 = $("#pesob").val();pun = $("#puntos").val();uid = $("#paraderos").val();
+                  comentario = $("#comentario").val();
                   /* validar datos */
                   if(b1<0){ alert('Valor incorrecto para bolsa A');return;}
                   if(b2<0){ alert('Valor incorrecto para bolsa B');return;}
@@ -213,9 +292,9 @@
                   if(uid=='' || uid<=0){ alert('Por favor seleccione el paradero de la recoleccion.');return;}
                   var radioValue = $("input[name='stars']:checked");
                   if(radioValue.length<1){alert('Por favor seleccione Calificacion');return;}
-                  if(b1==0 || b2==0 || p1==0 || p2==0 || pun==0){ bandera = 1;}
+                  if(b1==0 || b2==0 || p1==0 || p2==0 || pun==0 || comentario.length<2){ bandera = 1;}
                   if(bandera==1){
-                    c = confirm('Existen valores en 0 desear continuar?');
+                    c = confirm('Existen valores en 0 o vacios desear continuar?');
                   }else{
                     c = true;
                   }
@@ -229,7 +308,8 @@
                        r = JSON.parse(data);
                        if(r.c>0){
                         datat.ajax.reload( null, false );
-                        form.reset();
+                        data2.ajax.reload( null, false );
+                        $("#recoleccion_data").trigger("reset");
                         cargarParaderos('<?php echo $idRecoleccion;?>');
                        }else{
                         alert(r.m);

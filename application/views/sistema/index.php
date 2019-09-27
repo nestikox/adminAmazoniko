@@ -192,7 +192,7 @@
     
 		$.ajax({
 		method: "POST",
-		url: "<?=site_url('ajax_request/getProgramacionesAdmin')?>",
+		url: "<?=site_url('ajax_request/getProgramacionesUsuario')?>",
 		beforeSend: function(){	$("#cargador_holder").fadeIn();},
 		data: { usuario:<?=$this->session->userdata('user_id')?> }
 		})
