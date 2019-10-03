@@ -13,10 +13,10 @@ class Ajax_request extends CI_Controller
     public function getHistorial($idUser=0){
         $request = $_REQUEST;/*pedidos de datatable*/
         $data = array();
-        $recolector = $_GET['r'];
+        $recolector = isset($_GET['r'])?$_GET['r']:0;
         if($recolector==1){$t = 'recolector_id';}else{$t = 'usuario_id';}
         /* AREA DE ARMADO DE LOS QUERYS DE CONSULTA */
-        $q = "SELECT * FROM amazoniko2.a010_recoleccion_data where ".$t."=$idUser ";
+        $q = "SELECT * FROM a010_recoleccion_data where ".$t."=$idUser ";
         $totalData=$this->ajaxRequestModel->request_conteo($q);
         /* si existe una busqueda agregar los campos para filtrar resultados */
         /* AREA DE FILTROS */
@@ -56,7 +56,7 @@ class Ajax_request extends CI_Controller
         $request = $_REQUEST;/*pedidos de datatable*/
         $data = array();
         /* AREA DE ARMADO DE LOS QUERYS DE CONSULTA */
-        $q = "SELECT * FROM amazoniko2.a011_unidades where 1=1";
+        $q = "SELECT * FROM a011_unidades where 1=1";
         $totalData=$this->ajaxRequestModel->request_conteo($q);
         /* si existe una busqueda agregar los campos para filtrar resultados */
         /* AREA DE FILTROS */
@@ -113,6 +113,7 @@ class Ajax_request extends CI_Controller
             $totalFiltered=$this->ajaxRequestModel->request_conteo($q);
         /* Ordenar los resultados para ser procesados */
         foreach($rs as $k=>$r){
+            $adicion = '';
             $subdata = array();
             $subdata[] = $r->id;
             $subdata[] = $r->first_name." ".$r->last_name;
@@ -124,8 +125,8 @@ class Ajax_request extends CI_Controller
              $detalleUsuarioUrl = site_url('usuarios/verUsuario/'.$r->id);<a href="'.$detalleUsuarioUrl.'" ><i class="fa fa-eye"> Ver</i></a>&nbsp;
             */
             $estado = ($r->active==0?'<i class="fa fa-circle" title="Inactivo" style="color:red;"></i>':'<i class="fa fa-circle" title="Activo" style="color:green;"></i>');
-            $edicionUsuarioUrl = site_url('usuarios/editarUsuario/'.$r->id);
-           
+            if($r->tipousuario!='members'){$adicion = '?r=1';}
+            $edicionUsuarioUrl = site_url('usuarios/editarUsuario/'.$r->id.''.$adicion);
             $subdata[] = '<a href="'.$edicionUsuarioUrl.'" ><i class="fa fa-edit"> Editar</i></a>  '.$estado;
             /* FIN DE OPCIONES */
             $data[] = $subdata;
@@ -244,9 +245,9 @@ class Ajax_request extends CI_Controller
              $data = array();
              /* AREA DE ARMADO DE LOS QUERYS DE CONSULTA */
              $q = "SELECT r.*, concat(ua.first_name,' ',ua.last_name) as usuarioa, concat(ur.first_name,' ',ur.last_name) as recolector 
-					FROM amazoniko2.recoleccion r
-					left join amazoniko2.users ua on id_usuario = ua.id
-					left join amazoniko2.users ur on id_recolector = ur.id where 1=1";
+					FROM recoleccion r
+					left join users ua on id_usuario = ua.id
+					left join users ur on id_recolector = ur.id where 1=1";
              $totalData=$this->ajaxRequestModel->request_conteo($q);
              /* si existe una busqueda agregar los campos para filtrar resultados */
              /* AREA DE FILTROS */
@@ -380,7 +381,7 @@ class Ajax_request extends CI_Controller
         $request = $_REQUEST;/*pedidos de datatable*/
             $data = array();
             /* AREA DE ARMADO DE LOS QUERYS DE CONSULTA */
-            $q = "SELECT p.id, concat(uc.first_name,' ',uc.last_name) as creador, z.nombre as zona, r.nombre as ruta, concat(ur.first_name,' ',ur.last_name) as recolector, pf.nuevafecha as proximaProgamacion FROM amazoniko2.a006_programaciones p
+            $q = "SELECT p.id, concat(uc.first_name,' ',uc.last_name) as creador, z.nombre as zona, r.nombre as ruta, concat(ur.first_name,' ',ur.last_name) as recolector, pf.nuevafecha as proximaProgamacion FROM a006_programaciones p
                 left join a007_programaciones_fecha pf on p.id = pf.programacion_id
                 left join a003_zonas z on p.zona = z.id
                 left join a001_ruta r on p.ruta = r.ida001_ruta
@@ -792,15 +793,22 @@ class Ajax_request extends CI_Controller
     }
     
     public function get_recolecciones(){
+        /*error_reporting(-1); // reports all errors
+        ini_set("display_errors", "1"); // shows all errors
+        ini_set("log_errors", 1);
+        ini_set("error_log", "/tmp/php-error.log");*/
         $request = $_REQUEST;/*pedidos de datatable*/
         $data = array();
         /* AREA DE ARMADO DE LOS QUERYS DE CONSULTA */
-        $q = "select r.*, pf.nuevafecha, 
-            (select count(usuario) from a010_recoleccion_usuarios where recoleccion = r.id ) as usuarios,
-            re.nombre as estado_nombre from a009_recolecciones r
-            left join a007_programaciones_fecha pf on pf.id = r.fecha_id
-            left join a010_recoleccion_estado re on re.id = r.estado
-            where pf.nuevafecha is not null ";
+        $q = "select r.*, pf.nuevafecha,
+        (select count(usuario) from a010_recoleccion_usuarios where recoleccion = r.id ) as usuarios,
+        z.nombre as zona, z.color,
+        re.nombre as estado_nombre from a009_recolecciones r
+        left join a007_programaciones_fecha pf on pf.id = r.fecha_id
+        left join a006_programaciones p on pf.programacion_id = p.id
+        left join a003_zonas z on p.zona = z.id
+        left join a010_recoleccion_estado re on re.id = r.estado
+        where pf.nuevafecha is not null ";
         $totalData=$this->ajaxRequestModel->request_conteo($q);
         /* si existe una busqueda agregar los campos para filtrar resultados */
         /* AREA DE FILTROS */
@@ -816,6 +824,7 @@ class Ajax_request extends CI_Controller
     foreach($rs as $k=>$r){
         $subdata = array();
         $subdata[] = $r->id;
+        $subdata[] = "<span style='color:".$r->color."'>".$r->zona."</span>";
         $subdata[] = $r->nuevafecha;
         $subdata[] = $r->usuarios;
         $subdata[] = $r->estado_nombre;

@@ -91,7 +91,7 @@ class usuariosModel extends CI_Model {
         }
     }
     public function getUserOld($oldPassword, $id, $type=1){
-        $q ="SELECT * FROM amazoniko2.users where email = '$id' and password_old='$oldPassword';";     
+        $q ="SELECT * FROM users where email = '$id' and password_old='$oldPassword';";     
         $r =  $this->db->query($q);
         $n = $r->num_rows();
         $result =  array();
@@ -108,15 +108,15 @@ class usuariosModel extends CI_Model {
     }
     public function getSessionData($id, $idtipo=1){
         if($idtipo==2){
-            $q ="SELECT email, first_name, last_name, company, phone, rut, imagen FROM amazoniko2.users where id='$id';";
+            $q ="SELECT email, first_name, last_name, company, phone, rut, imagen FROM users where id='$id';";
         }else{
-            $q ="SELECT email, first_name, last_name, company, phone, rut, imagen FROM amazoniko2.users where email='$id';"; 
+            $q ="SELECT email, first_name, last_name, company, phone, rut, imagen FROM users where email='$id';"; 
         }
        $r=$this->db->query($q);
        return $r->row();
     }
     public function checkUserExist($id){
-        $q ="SELECT email, first_name, last_name, company, phone, rut, imagen FROM amazoniko2.users where email='$id';";
+        $q ="SELECT email, first_name, last_name, company, phone, rut, imagen FROM users where email='$id';";
         $r=$this->db->query($q);
         $check = $r->num_rows();
         if($check>0){

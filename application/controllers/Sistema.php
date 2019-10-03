@@ -85,9 +85,7 @@ class Sistema extends CI_Controller
 					echo " asignada ".$zona['zonaNombre']."<br>";
 				}
 				$i++;
-			}else{
-				echo "<br>";
-			}
+			}else{ echo "<br>"; }
 		}
 	}*/
 	

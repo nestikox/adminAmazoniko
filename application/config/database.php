@@ -72,7 +72,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 */
 $active_group = 'default';
 $query_builder = TRUE;
-/* DATOS SERVIDOR PRUEBAS */
+/* DATOS SERVIDOR PRUEBAS 
 if($_SERVER['HTTP_HOST'] == '190.146.247.240'):
 $db['default'] = array(
 	'dsn'	=> '',
@@ -116,7 +116,8 @@ $db['amazoniko'] = array(
 	'failover' => array(),
 	'save_queries' => TRUE
 );
-else:
+else:*/
+
 /* DATOS SERVIDOR PRODUCCION */
 $db['default'] = array(
 	'dsn'	=> '',
@@ -160,4 +161,3 @@ $db['amazoniko'] = array(
 	'failover' => array(),
 	'save_queries' => TRUE
 );
-endif;

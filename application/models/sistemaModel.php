@@ -24,7 +24,7 @@
         }
 
         public function getUnidad($id){
-            $q="SELECT * FROM amazoniko2.a011_unidades where id=$id;";
+            $q="SELECT * FROM a011_unidades where id=$id;";
             $r=$this->db->query($q);
             return $r->result();
         }

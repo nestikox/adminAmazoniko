@@ -44,7 +44,7 @@
            // }
         }
         public function getProgramacionZona($idZona){
-          $q="SELECT * FROM amazoniko2.a006_programaciones where zona =$idZona;";
+          $q="SELECT * FROM a006_programaciones where zona =$idZona;";
           $qr = $this->db->query($q);
           $qn = $qr->num_rows();
           if($qn>0){
@@ -54,7 +54,7 @@
           }
         }
         public function asignarPuntosRecoleccion($idRecoleccion){
-          $q1="SELECT * FROM amazoniko2.a010_recoleccion_usuarios where recoleccion = $idRecoleccion;";
+          $q1="SELECT * FROM a010_recoleccion_usuarios where recoleccion = $idRecoleccion;";
           $qr1 = $this->db->query($q1);
           foreach($qr1->result() as $k => $usRe){
             /* usRe = usuarios recoleccion */
@@ -174,7 +174,7 @@
         public function getProgramacionesZona($idu){
           $q="select pro.dia, z.nombre, z.color from a006_programaciones pro
         left join a002_paraderos pa on pa.zona = pro.zona
-        left join a003_zonas Z on pa.zona = z.id
+        left join a003_zonas z on pa.zona = z.id
         where pa.usuario_id=$idu;";
         $qr = $this->db->query($q);
           return $qr->row();
@@ -305,7 +305,7 @@
         }
         
         public function getRutaUsuarioMember($id){
-          $q="SELECT * FROM amazoniko2.a005_usuario_rutas where usuario_id =$id;";
+          $q="SELECT * FROM a005_usuario_rutas where usuario_id =$id;";
           $rq = $this->db->query($q);
           return $rq->row();
         }

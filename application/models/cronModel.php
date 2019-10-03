@@ -98,7 +98,7 @@ class CronModel extends CI_Model
     }
     public function generarRecolecciones(){
       /* consultar fechas que no tienen recoleccion */
-      $q1="SELECT pf.* FROM amazoniko2.a007_programaciones_fecha pf
+      $q1="SELECT pf.* FROM a007_programaciones_fecha pf
           left join a009_recolecciones rec on rec.fecha_id = pf.id
           where pf.nuevafecha >= current_date() and rec.id is null;";
       $q1r = $this->db->query($q1);
@@ -174,7 +174,7 @@ class CronModel extends CI_Model
 	public function actualizarPuntos(){
   echo "Not allowed";
 		/*
-		$r = $this->db->query('SELECT u.correo as usuario, r.correo as recolector, a.bolsas_p, a.bolsas_ac, a.peso_p, a.peso_ac, calificacion, a.puntos FROM amazoniko2.recoleccion a
+		$r = $this->db->query('SELECT u.correo as usuario, r.correo as recolector, a.bolsas_p, a.bolsas_ac, a.peso_p, a.peso_ac, calificacion, a.puntos FROM recoleccion a
 left join usuarios u on u.id = a.id_usuario
 left join usuarios r on r.id = a.id_recolector');
 		$usuariosAnteriores = $r->result();

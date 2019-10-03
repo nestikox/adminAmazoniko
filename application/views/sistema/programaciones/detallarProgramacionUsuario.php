@@ -37,8 +37,8 @@
               <div class="box-body">
                 <div class="row">
                 <div class="col-md-12">
-                  <div class="col-md-6 form-group" > Tu zona es: <label style="color:<?php echo $programacion->color;?>!important;"><?php echo $programacion->nombre;?></label></div>
-                  <div class="col-md-6 form-group"> Dias de recolección: <label><?php echo $programacion->dia;?></label></div>
+                  <div class="col-md-6 form-group" > Tu zona es: <label style="color:<?php echo isset($programacion->color)?$programacion->color:'red';?>!important;"><?php echo isset($programacion->nombre)?$programacion->nombre:'No tiene zona asignada.';?></label></div>
+                  <div class="col-md-6 form-group"> Dias de recolección: <label><?php echo isset($programacion->dia)?$programacion->dia:'-';?></label></div>
                   <div class="col-md-6 form-group">
                         <label>Fechas de Recoleccion</label><br>
                         <select class="form-control" name="fechaProxima" id="fechaProxima" <?php if($fecha['r2']>0){echo 'title="Ya ha programado una fecha de recolección"';}?> required <?php if($fecha['r2']>0){echo 'disabled';}?>>
@@ -287,10 +287,9 @@
 														navigator.geolocation.getCurrentPosition(function(position) {
 																var pos = {lat: position.coords.latitude,lng: position.coords.longitude};
 																infoWindow.setPosition(pos);
-																infoWindow.setContent('Location found.');
-																infoWindow.open(map);
-																map.setCenter(pos);
-																console.log('located position'+pos);
+                                if(marcadores.length<1){
+                                    map.setCenter(pos);
+                                }
 														}, function() {
 									  handleLocationError(true, infoWindow, map.getCenter());
 								  });
@@ -357,7 +356,7 @@
 							function clearMarkers() {setMapOnAll(null);}
               // Deletes all markers in the array by removing references to them.
 							function deleteMarkers() {clearMarkers();markers = [];}
-              function handleLocationError(browserHasGeolocation, infoWindow, pos) { infoWindow.setPosition(pos);
+              function handleLocationError(browserHasGeolocation, infoWindow, pos){ infoWindow.setPosition(pos);
                        infoWindow.setContent(browserHasGeolocation ?
                                        'Error: The Geolocation service failed.' :
                                        'Error: Your browser doesn\'t support geolocation.');

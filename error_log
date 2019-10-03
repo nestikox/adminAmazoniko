@@ -1,0 +1,31 @@
+[03-Oct-2019 04:30:20 UTC] PHP Notice:  Undefined variable: vencidasq in /home/amazoniko/public_html/admin/cronjob.programacion.php on line 25
+[03-Oct-2019 04:30:20 UTC] PHP Warning:  mysqli_fetch_assoc() expects parameter 1 to be mysqli_result, null given in /home/amazoniko/public_html/admin/cronjob.programacion.php on line 25
+[03-Oct-2019 04:30:20 UTC] PHP Warning:  Invalid argument supplied for foreach() in /home/amazoniko/public_html/admin/cronjob.programacion.php on line 25
+[03-Oct-2019 04:33:26 UTC] PHP Warning:  Invalid argument supplied for foreach() in /home/amazoniko/public_html/admin/cronjob.programacion.php on line 25
+[03-Oct-2019 16:30:25 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function sayHellow() in /home/amazoniko/public_html/admin/cronjob.programacion.php:12
+Stack trace:
+#0 {main}
+  thrown in /home/amazoniko/public_html/admin/cronjob.programacion.php on line 12
+[03-Oct-2019 16:31:12 UTC] PHP Parse error:  syntax error, unexpected 'as' (T_AS) in /home/amazoniko/public_html/admin/cronjob.programacion.php on line 22
+[03-Oct-2019 16:31:30 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function sayHellow() in /home/amazoniko/public_html/admin/cronjob.programacion.php:12
+Stack trace:
+#0 {main}
+  thrown in /home/amazoniko/public_html/admin/cronjob.programacion.php on line 12
+[03-Oct-2019 18:03:24 UTC] PHP Parse error:  syntax error, unexpected 'public' (T_PUBLIC), expecting end of file in /home/amazoniko/public_html/admin/cronjob.programacion.php on line 41
+[03-Oct-2019 18:03:56 UTC] PHP Parse error:  syntax error, unexpected 'public' (T_PUBLIC), expecting end of file in /home/amazoniko/public_html/admin/cronjob.programacion.php on line 41
+[03-Oct-2019 18:04:51 UTC] PHP Parse error:  syntax error, unexpected 'public' (T_PUBLIC), expecting end of file in /home/amazoniko/public_html/admin/cronjob.programacion.php on line 41
+[03-Oct-2019 18:04:59 UTC] PHP Parse error:  syntax error, unexpected 'public' (T_PUBLIC), expecting end of file in /home/amazoniko/public_html/admin/cronjob.programacion.php on line 41
+[03-Oct-2019 18:05:40 UTC] PHP Parse error:  syntax error, unexpected 'public' (T_PUBLIC), expecting end of file in /home/amazoniko/public_html/admin/cronjob.programacion.php on line 41
+[03-Oct-2019 18:05:58 UTC] PHP Notice:  Undefined variable: recoleccion in /home/amazoniko/public_html/admin/cronjob.programacion.php on line 16
+[03-Oct-2019 18:05:58 UTC] PHP Notice:  Undefined variable: recoleccion in /home/amazoniko/public_html/admin/cronjob.programacion.php on line 16
+[03-Oct-2019 18:05:58 UTC] PHP Notice:  Undefined variable: recoleccion in /home/amazoniko/public_html/admin/cronjob.programacion.php on line 16
+[03-Oct-2019 18:06:22 UTC] PHP Parse error:  syntax error, unexpected 'public' (T_PUBLIC), expecting end of file in /home/amazoniko/public_html/admin/cronjob.programacion.php on line 41
+[03-Oct-2019 18:06:32 UTC] PHP Notice:  Undefined variable: recoleccion in /home/amazoniko/public_html/admin/cronjob.programacion.php on line 16
+[03-Oct-2019 18:06:32 UTC] PHP Notice:  Undefined variable: recoleccion in /home/amazoniko/public_html/admin/cronjob.programacion.php on line 16
+[03-Oct-2019 18:06:32 UTC] PHP Notice:  Undefined variable: recoleccion in /home/amazoniko/public_html/admin/cronjob.programacion.php on line 16
+[03-Oct-2019 18:06:43 UTC] PHP Notice:  Undefined variable: recoleccion in /home/amazoniko/public_html/admin/cronjob.programacion.php on line 16
+[03-Oct-2019 18:06:43 UTC] PHP Notice:  Undefined variable: recoleccion in /home/amazoniko/public_html/admin/cronjob.programacion.php on line 16
+[03-Oct-2019 18:06:43 UTC] PHP Notice:  Undefined variable: recoleccion in /home/amazoniko/public_html/admin/cronjob.programacion.php on line 16
+[03-Oct-2019 20:47:41 UTC] PHP Parse error:  syntax error, unexpected 'public' (T_PUBLIC), expecting end of file in /home/amazoniko/public_html/admin/cronjob.programacion.php on line 42
+[03-Oct-2019 20:49:25 UTC] PHP Parse error:  syntax error, unexpected 'public' (T_PUBLIC), expecting end of file in /home/amazoniko/public_html/admin/cronjob.programacion.php on line 43
+[03-Oct-2019 20:52:16 UTC] PHP Parse error:  syntax error, unexpected 'public' (T_PUBLIC), expecting end of file in /home/amazoniko/public_html/admin/cronjob.programacion.php on line 43

@@ -37,7 +37,7 @@
             return $r->result();
         }
 				public function getPoligonZona($idZona){
-				$q="SELECT * FROM amazoniko2.a004_zona_coordenadas where co_zona =".$idZona." order by id004 asc";
+				$q="SELECT * FROM a004_zona_coordenadas where co_zona =".$idZona." order by id004 asc";
 				$r = $this->db->query($q);
 				$poligon = $r->result();
 				$retorno="";
@@ -54,7 +54,7 @@
 				}
         
         public function getPoligonZonaArray($idZona){
-          $q="SELECT * FROM amazoniko2.a004_zona_coordenadas where co_zona =".$idZona." order by id004 asc";
+          $q="SELECT * FROM a004_zona_coordenadas where co_zona =".$idZona." order by id004 asc";
 				$r = $this->db->query($q);
 				$poligon = $r->result();
 				$retorno=array();
@@ -158,18 +158,18 @@
 				}
 		}
 		public function chequearParaderoExisteUsuario($id_Usuario){
-			$q="select * from a002_paraderos where usuario_id =$id_Usuario";
+			$q="select * from a002_paraderos where usuario_id=$id_Usuario";
 			$r =  $this->db->query($q);
 			$res = $r->row();
 			$resnum = $r->num_rows();
-      $q2="SELECT phone, rut FROM amazoniko2.users where id=$id_Usuario";
+      $q2="SELECT phone, rut FROM users where id=$id_Usuario";
 			$r2 =  $this->db->query($q2);
       $res2 = $r2->row();
       $retorno = false;
 			if($resnum>0){ $retorno = true;}else{return false;}
       if(strlen($res2->phone)>2){ $retorno = true;}else{ return false;}
-      if(strlen($res2->rut)>2){ $retorno = true;}else{  return false; }
-      if($res->zona!=0 or strlen($res->zona)>0){ $retorno = true;}else{  return false; }
+      if(strlen($res2->rut)>2){ $retorno = true;}else{ return false;}
+      if(intval($res->zona)!=0 and strlen($res->zona)>=1){ $retorno = true;}else{ return false;}
       return $retorno;
 		}
     
@@ -214,7 +214,7 @@
 		}
     /* coordenadas juntas seperadas por espacio */
     public function getCoordZonaSep($id){
-      $q="SELECT concat(lat,' ',lng) as coordenadas FROM amazoniko2.a004_zona_coordenadas where co_zona =$id;";
+      $q="SELECT concat(lat,' ',lng) as coordenadas FROM a004_zona_coordenadas where co_zona =$id;";
       $query = $this->db->query($q);
       $res = $query->result();
       $result = array();
@@ -395,7 +395,7 @@
   
 	public function getRecolectorPorRuta($ruta, $t=0){
 		$q="SELECT u.id, u.email, concat(u.first_name,' ',u.last_name) as name  
-      FROM amazoniko2.a005_usuario_rutas ur
+      FROM a005_usuario_rutas ur
       left join users u on u.id = ur.usuario_id
       left join users_groups ug on u.id = user_id
       left join groups g on g.id = ug.group_id

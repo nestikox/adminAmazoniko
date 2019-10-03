@@ -390,10 +390,10 @@
 				dir += ' ' + a2;
 			}
 			if (a3.length > 0) {
-				dir += ' # ' + a3;
+				dir += ' #' + a3;
 			}
 			if (a4.length > 0) {
-				dir += ' - ' + a4;
+				dir += '-' + a4;
 			}
 			$("#direccion_paradero").val(dir);
 			$("#direccion_paradero").trigger('change');
@@ -429,10 +429,9 @@
 						lng: position.coords.longitude
 					};
 					infoWindow.setPosition(pos);
-					infoWindow.setContent('Location found.');
-					infoWindow.open(map);
-					map.setCenter(pos);
-					console.log('located position' + pos);
+					if(marcadores.length<1){
+						map.setCenter(pos);
+					}
 				}, function() {
 					handleLocationError(true, infoWindow, map.getCenter());
 				});
@@ -523,9 +522,7 @@
 		function handleLocationError(browserHasGeolocation, infoWindow, pos) {
 			if(marcadores.length<1){
                 infoWindow.setPosition(pos);
-				infoWindow.setContent(browserHasGeolocation ? 'Error: Ubicación automatica no se pudo ejecutar.' : 'Error: Tu navegador no soporta Geolocalización.');
-				infoWindow.open(map);
-                }
+            }
 		}
 	</script>
 	<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBU1DFhBkdGMc4OfpW90wIEQmlVnWZ6mCo&libraries=places&callback=initMap"></script>
